@@ -8,6 +8,7 @@ import fs2.Chunk.ByteBuffer
 import scodec.bits.ByteVector
 import fs2.Chunk.ByteVectorChunk
 import java.nio.charset.StandardCharsets
+import jnr.unixsocket.UnixSocketAddress
 
 object Main extends IOApp {
   val unix = "unix://"
@@ -18,13 +19,40 @@ object Main extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     for {
       blocker <- Blocker[IO]
-      socket <- UnixSocket.impl[IO](localSocket, blocker)
+      server <- UnixSocket.serverResource[IO](new UnixSocketAddress(localSocket), blocker)
+      _ <- Resource.liftF(IO(println("Server Connected")))
+      client <- UnixSocket.client[IO](localSocket, blocker)
+      _ <- Resource.liftF(IO(println("Client Connected")))
 
       _ <- Resource.liftF(
-        socket.localAddress.flatTap(a => IO(println(a))) >>
-        socket.remoteAddress.flatTap(a => IO(println(a))) >>
-        socket.isOpen.flatTap(a => IO(println(a))) >>
-        socket.readN(10).flatTap(a => IO(println(a)))
+        client.localAddress.flatTap(a => IO(println(a))) >>
+        client.remoteAddress.flatTap(a => IO(println(a))) >>
+        client.isOpen.flatTap(a => IO(println(a))) >>
+
+        server.take(1).flatMap(r => 
+
+        Stream.eval(Timer[IO].sleep(1.second)) ++
+          Stream.resource(r)
+            .flatMap(s => Stream.eval(s.read(5)).repeat)
+            .take(5)
+            .unNone
+            .flatMap(Stream.chunk(_))
+            .through(fs2.text.utf8Decode)
+            .evalTap(i => IO(println(i)))
+        )
+          .concurrently(
+            Stream.awakeDelay[IO](1.second).as{
+              "Hello"
+              }
+              .through(fs2.text.utf8Encode)
+              .through(client.writes(None))
+              
+          ).timeout(10.seconds)
+            .compile
+            .drain
+
+        
+        // socket.readN(10).flatTap(a => IO(println(a)))
 
         // out.reads(512).chunks.evalTap(a => IO(a.toByteVector.decodeUtf8))
         //   .concurrently(

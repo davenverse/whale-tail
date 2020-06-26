@@ -7,23 +7,79 @@ import cats.effect.implicits._
 import fs2._
 import fs2.io.tcp.Socket
 import java.nio.channels.Channels
-import jnr.unixsocket.UnixSocketChannel
-import jnr.unixsocket.UnixSocketAddress
+import jnr.unixsocket._ // This is where the fun begins
+import jnr.unixsocket.impl.AbstractNativeSocketChannel
 import java.nio.{Buffer, ByteBuffer}
 import java.net.SocketAddress
 import scala.concurrent.duration._
 
 object UnixSocket {
-  def unixSocket[F[_]: Sync: ContextShift](path: String, blocker: Blocker) = {
-    Resource.make(
-      Sync[F].delay(UnixSocketChannel.open(new UnixSocketAddress(path)))
-    )(channel =>  blocker.delay( if (channel.isOpen) channel.close() else ()).attempt.void)
-  } 
 
-  def apply[F[_]](
-      ch: UnixSocketChannel,
+  def serverResource[F[_]](
+      address: UnixSocketAddress,
+      // reuseAddress: Boolean = true,
+      // receiveBufferSize: Int = 256 * 1024,
+      // additionalSocketOptions: List[SocketOptionMapping[_]] = List.empty,
       blocker: Blocker
-  )(implicit F: Concurrent[F], cs: ContextShift[F], timer: Timer[F]): F[Socket[F]] = (Semaphore[F](1), Semaphore[F](1), Ref[F].of(ByteBuffer.allocate(0))).mapN {
+  )(implicit
+      F: Concurrent[F],
+      CS: ContextShift[F],
+      Timer: Timer[F]
+  ): Resource[F, Stream[F, Resource[F, Socket[F]]]] = {
+    def setup = blocker.delay{
+      val serverChannel = UnixServerSocketChannel.open()
+      serverChannel.configureBlocking(false)
+      serverChannel.socket().bind(address)
+      serverChannel
+    }
+
+    def cleanup(sch: UnixServerSocketChannel): F[Unit] = {
+        blocker.delay{
+          if (sch.isOpen) println("Server Socket Was Open, Closing"); sch.close()
+          if (sch.isRegistered()) println("Server Still Registered")
+        }
+    }
+
+    def acceptIncoming(sch: UnixServerSocketChannel): Stream[F, Resource[F, Socket[F]]] = {
+      def go: Stream[F, Resource[F, Socket[F]]] = {
+        def acceptChannel: F[UnixSocketChannel] =
+          blocker.delay{
+            val ch = sch.accept()
+            ch.configureBlocking(false)
+            ch
+          }
+        //   asyncYield[F, AsynchronousSocketChannel] { cb =>
+        //     sch.accept(
+        //       null,
+        //       new CompletionHandler[AsynchronousSocketChannel, Void] {
+        //         def completed(ch: AsynchronousSocketChannel, attachment: Void): Unit =
+        //           cb(Right(ch))
+        //         def failed(rsn: Throwable, attachment: Void): Unit =
+        //           cb(Left(rsn))
+        //       }
+        //     )
+        //   }
+
+        Stream.eval(acceptChannel.attempt).flatMap {
+          case Left(_)         => Stream.empty[F]
+          case Right(accepted) => Stream.emit(makeSocket(accepted, blocker))
+        } ++ go
+      }
+    
+
+      go
+    }
+
+    Resource.make(setup)(cleanup).map { sch =>
+      acceptIncoming(sch)
+    }
+  }
+
+  def makeSocket[F[_]](
+      ch: AbstractNativeSocketChannel,
+      blocker: Blocker
+  )(implicit F: Concurrent[F], cs: ContextShift[F], timer: Timer[F]): Resource[F, Socket[F]] = {
+    val socket = (Semaphore[F](1), Semaphore[F](1), Ref[F].of(ByteBuffer.allocate(0))).mapN {
           (readSemaphore, writeSemaphore, bufferRef) =>
         // Reads data to remaining capacity of supplied ByteBuffer
         // Also measures time the read took returning this as tuple
@@ -150,10 +206,13 @@ object UnixSocket {
               ch.shutdownInput(); ()
             }
       }
+    }
+    Resource.make(socket)(_ => blocker.delay(if (ch.isOpen) ch.close else ()).attempt.void)
   }
 
-  def impl[F[_]: Concurrent: ContextShift: Timer](path: String, blocker: Blocker) = 
-    unixSocket(path, blocker).evalMap(apply[F](_, blocker))
+  def client[F[_]: Concurrent: ContextShift: Timer](path: String, blocker: Blocker): Resource[F, Socket[F]] = 
+    Resource.liftF(Sync[F].delay(UnixSocketChannel.open(new UnixSocketAddress(path))))
+      .flatMap(makeSocket[F](_, blocker))
 
 
 }

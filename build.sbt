@@ -17,12 +17,21 @@ val betterMonadicForV = "0.3.1"
 lazy val `whale-tail` = project.in(file("."))
   .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
-  .aggregate(core)
+  .aggregate(core, examples)
 
 lazy val core = project.in(file("core"))
   .settings(commonSettings)
   .settings(
     name := "whale-tail"
+  )
+
+lazy val examples = project.in(file("examples"))
+  .disablePlugins(MimaPlugin)
+  .enablePlugins(NoPublishPlugin)
+  .settings(commonSettings)
+  .dependsOn(core)
+  .settings(
+    name := "whale-tail-examples"
   )
 
 lazy val site = project.in(file("site"))

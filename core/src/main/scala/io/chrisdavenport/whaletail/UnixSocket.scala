@@ -12,30 +12,38 @@ import jnr.unixsocket.impl.AbstractNativeSocketChannel
 import java.nio.{Buffer, ByteBuffer}
 import java.net.SocketAddress
 import scala.concurrent.duration._
+import java.nio.file._
 
 object UnixSocket {
 
-  def serverResource[F[_]](
+  def client[F[_]: Concurrent: ContextShift: Timer](address: UnixSocketAddress, blocker: Blocker): Resource[F, Socket[F]] = 
+    Resource.liftF(Sync[F].delay(UnixSocketChannel.open(address)))
+      .flatMap(makeSocket[F](_, blocker))
+
+
+  def server[F[_]](
       address: UnixSocketAddress,
-      // reuseAddress: Boolean = true,
-      // receiveBufferSize: Int = 256 * 1024,
-      // additionalSocketOptions: List[SocketOptionMapping[_]] = List.empty,
       blocker: Blocker
   )(implicit
       F: Concurrent[F],
       CS: ContextShift[F],
       Timer: Timer[F]
   ): Resource[F, Stream[F, Resource[F, Socket[F]]]] = {
-    def setup = blocker.delay{
-      val serverChannel = UnixServerSocketChannel.open()
-      serverChannel.configureBlocking(false)
-      serverChannel.socket().bind(address)
-      serverChannel
-    }
+    def setup = fs2.io.file.exists(blocker, Paths.get(address.path)).ifM(
+      F.raiseError(throw new Throwable("Socket Location Already Exists, Server cannot create Socket Location when location already exists."))
+      ,
+      blocker.delay{
+        val serverChannel = UnixServerSocketChannel.open()
+        serverChannel.configureBlocking(false)
+        val sock = serverChannel.socket()
+        sock.bind(address)
+        serverChannel
+      }
+    )
 
     def cleanup(sch: UnixServerSocketChannel): F[Unit] = {
         blocker.delay{
-          if (sch.isOpen) println("Server Socket Was Open, Closing"); sch.close()
+          if (sch.isOpen) sch.close()
           if (sch.isRegistered()) println("Server Still Registered")
         }
     }
@@ -48,25 +56,12 @@ object UnixSocket {
             ch.configureBlocking(false)
             ch
           }
-        //   asyncYield[F, AsynchronousSocketChannel] { cb =>
-        //     sch.accept(
-        //       null,
-        //       new CompletionHandler[AsynchronousSocketChannel, Void] {
-        //         def completed(ch: AsynchronousSocketChannel, attachment: Void): Unit =
-        //           cb(Right(ch))
-        //         def failed(rsn: Throwable, attachment: Void): Unit =
-        //           cb(Left(rsn))
-        //       }
-        //     )
-        //   }
 
         Stream.eval(acceptChannel.attempt).flatMap {
           case Left(_)         => Stream.empty[F]
           case Right(accepted) => Stream.emit(makeSocket(accepted, blocker))
         } ++ go
       }
-    
-
       go
     }
 
@@ -75,22 +70,15 @@ object UnixSocket {
     }
   }
 
-  def makeSocket[F[_]](
+  private def makeSocket[F[_]](
       ch: AbstractNativeSocketChannel,
       blocker: Blocker
   )(implicit F: Concurrent[F], cs: ContextShift[F], timer: Timer[F]): Resource[F, Socket[F]] = {
     val socket = (Semaphore[F](1), Semaphore[F](1), Ref[F].of(ByteBuffer.allocate(0))).mapN {
           (readSemaphore, writeSemaphore, bufferRef) =>
         // Reads data to remaining capacity of supplied ByteBuffer
-        // Also measures time the read took returning this as tuple
-        // of (bytes_read, read_duration)
-
-        def now: F[Long] = Sync[F].delay(System.currentTimeMillis())
-
-        def readChunk(buff: ByteBuffer, timeoutMs: Long): F[(Int, Long)] =
-          (now, blocker.delay(ch.read(buff)), now).mapN{
-            case (before, out, now) => (out, now - before)
-          }//.timeout(timeoutMs.millis) 
+        def readChunk(buff: ByteBuffer): F[Int] =
+          blocker.delay(ch.read(buff))
 
         // gets buffer of desired capacity, ready for the first read operation
         // If the buffer does not have desired capacity it is resized (recreated)
@@ -124,52 +112,49 @@ object UnixSocket {
             result
           }
 
-        def read0(max: Int, timeout: Option[FiniteDuration]): F[Option[Chunk[Byte]]] =
-          readSemaphore.withPermit {
+        def read0(max: Int, timeout: Option[FiniteDuration]): F[Option[Chunk[Byte]]] = {
+          val action = readSemaphore.withPermit {
             getBufferOf(max).flatMap { buff =>
-              readChunk(buff, timeout.map(_.toMillis).getOrElse(0L)).flatMap {
-                case (read, _) =>
-                  if (read < 0) F.pure(None)
-                  else releaseBuffer(buff).map(Some(_))
+              readChunk(buff).flatMap {
+                case read =>
+                  if (read < 0) F.pure(Option.empty[Chunk[Byte]])
+                  else releaseBuffer(buff).map(_.some)
               }
             }
           }
+          timeout.fold(action)(action.timeout(_))
+        }
 
-        def readN0(max: Int, timeout: Option[FiniteDuration]): F[Option[Chunk[Byte]]] =
-          readSemaphore.withPermit {
+        def readN0(max: Int, timeout: Option[FiniteDuration]): F[Option[Chunk[Byte]]] = {
+          val action = readSemaphore.withPermit {
             getBufferOf(max).flatMap { buff =>
-              def go(timeoutMs: Long): F[Option[Chunk[Byte]]] =
-                readChunk(buff, timeoutMs).flatMap {
-                  case (readBytes, took) =>
+              def internalAction : F[Option[Chunk[Byte]]] =
+                readChunk(buff).flatMap {
+                  case  readBytes =>
                     if (readBytes < 0 || buff.position() >= max)
                       // read is done
-                      releaseBuffer(buff).map(Some(_))
-                    else go((timeoutMs - took).max(0))
+                      releaseBuffer(buff).map(_.some)
+                    else internalAction
                 }
 
-              go(timeout.map(_.toMillis).getOrElse(0L))
+              internalAction
             }
           }
+          timeout.fold(action)(action.timeout(_))
+        }
 
         def write0(bytes: Chunk[Byte], timeout: Option[FiniteDuration]): F[Unit] = {
-          def go(buff: ByteBuffer, remains: Long): F[Unit] = {
-              val base = for {
-                before <- now
-                _ <- blocker.delay(ch.write(buff))
-                after <- now
-              } yield {
-                if (buff.remaining() <= 0) None
-                else Some(after - before)
-              }
-              base
-              //timeout.map(base.timeout(_)).getOrElse(base)
-            }.flatMap {
-              case None       => F.pure(())
-              case Some(took) => go(buff, (remains - took).max(0))
+          def go(buff: ByteBuffer): F[Unit] = {
+            blocker.delay(ch.write(buff)) >> {
+              if (buff.remaining <= 0) F.unit
+              else go(buff)
             }
-          writeSemaphore.withPermit {
-            go(bytes.toBytes.toByteBuffer, timeout.map(_.toMillis).getOrElse(0L))
           }
+          val action = writeSemaphore.withPermit {
+            go(bytes.toBytes.toByteBuffer)
+          }
+
+          timeout.fold(action)(time => action.timeout(time))
         }
 
         ////////////
@@ -210,9 +195,6 @@ object UnixSocket {
     Resource.make(socket)(_ => blocker.delay(if (ch.isOpen) ch.close else ()).attempt.void)
   }
 
-  def client[F[_]: Concurrent: ContextShift: Timer](path: String, blocker: Blocker): Resource[F, Socket[F]] = 
-    Resource.liftF(Sync[F].delay(UnixSocketChannel.open(new UnixSocketAddress(path))))
-      .flatMap(makeSocket[F](_, blocker))
 
 
 }

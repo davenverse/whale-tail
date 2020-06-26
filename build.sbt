@@ -82,7 +82,7 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % betterMonadicForV),
 
   libraryDependencies ++= Seq(
-    "com.github.jnr"              %  "jnr-unixsocket"             % "0.28",
+    "com.github.jnr"              %  "jnr-unixsocket"             % "0.32",
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "alleycats-core"             % catsV,
 

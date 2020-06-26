@@ -31,7 +31,11 @@ lazy val examples = project.in(file("examples"))
   .settings(commonSettings)
   .dependsOn(core)
   .settings(
-    name := "whale-tail-examples"
+    name := "whale-tail-examples",
+    libraryDependencies ++= Seq(
+      "io.chrisdavenport"           %% "log4cats-slf4j"             % log4catsV,
+      "ch.qos.logback" % "logback-classic"      % "1.2.3"
+    )
   )
 
 lazy val site = project.in(file("site"))
@@ -104,6 +108,7 @@ lazy val commonSettings = Seq(
 
     "org.http4s"                  %% "http4s-dsl"                 % http4sV,
     "org.http4s"                  %% "http4s-ember-core"          % http4sV,
+    "org.http4s"                  %% "http4s-client"              % http4sV,
     "org.http4s"                  %% "http4s-circe"               % http4sV,
 
     "io.circe"                    %% "circe-core"                 % circeV,
@@ -117,7 +122,7 @@ lazy val commonSettings = Seq(
     "org.tpolecat"                %% "doobie-specs2"              % doobieV       % Test,
 
     "io.chrisdavenport"           %% "log4cats-core"              % log4catsV,
-    "io.chrisdavenport"           %% "log4cats-slf4j"             % log4catsV,
+
     "io.chrisdavenport"           %% "log4cats-testing"           % log4catsV     % Test,
 
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,

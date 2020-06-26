@@ -11,10 +11,10 @@ import java.nio.file.Paths
 
 import _root_.io.chrisdavenport.whaletail.UnixSocket
 
-object Main extends IOApp {
+object StaticLocationExample extends IOApp {
   // val unix = "unix://"
   // val dockerSocket = "/var/run/docker.sock"
-  val localSocket = "./aSocket.sock"
+  val localSocket = "/tmp/aSocket.sock"
 
   def run(args: List[String]): IO[ExitCode] = {
     for {

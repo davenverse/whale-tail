@@ -20,7 +20,15 @@ object ContainersExample extends IOApp {
       blocker <- Blocker[IO]
       client = Docker.default(blocker, logger)
       created <- Resource.liftF(
-        Containers.Operations.create(client, "redis:latest").logInfo
+        Containers.Operations.create(client, "redis:latest", Set(6379)).logInfo
+      )
+      _ <- Resource.make(
+        Containers.Operations.start(client, created.id).logInfo
+      )(_ => 
+        Containers.Operations.stop(client, created.id, None).logInfo.void
+      )
+      _ <- Resource.liftF(
+        Containers.Operations.inspect(client, created.id).logInfo
       )
     } yield ()
   }.use(_ => IO.pure(ExitCode.Success))

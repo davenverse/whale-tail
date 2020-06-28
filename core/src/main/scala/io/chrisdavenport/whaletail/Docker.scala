@@ -38,13 +38,13 @@ object Docker {
     responseIdleTimeout: Option[FiniteDuration] = 60.seconds.some
   ): Client[F] = Client( req => 
       Resource.liftF(
-        (EmberBackdoor.requestEncoder(withHost(req)) ++ fs2.Stream.chunk(ByteVectorChunk(ByteVector.encodeUtf8("\r\n").fold(throw _ , identity))))// Docker Requires a Host Header
-          .through(s => s.chunks.evalTap(chunk => logger.debug(s"Wrote: ${chunk.toByteVector.decodeUtf8}")).flatMap(fs2.Stream.chunk(_)))
+        EmberBackdoor.requestEncoder(withHost(req))// Docker Requires a Host Header
           .through(socket.writes(requestIdleTimeout))
           .compile
           .drain
       ) >> EmberBackdoor.responseParser(maxHeadersLength, logger)(socket.reads(maxResponseBytesRead, responseIdleTimeout))
   )
+
 
   private val dockerSocketAddr = new UnixSocketAddress("/var/run/docker.sock")
   private def withHost[F[_]](req: Request[F]): Request[F] = 

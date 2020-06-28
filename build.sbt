@@ -1,11 +1,11 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val catsV = "2.1.0"
+val catsV = "2.1.1"
 val catsEffectV = "2.1.3"
 val shapelessV = "2.3.3"
 val fs2V = "2.4.2"
-val http4sV = "0.21.5+2-fa686e93-SNAPSHOT" // Requires https://github.com/http4s/http4s/pull/3538
-val circeV = "0.12.3"
+val http4sV = "0.21.6"
+val circeV = "0.13.0"
 val doobieV = "0.9.0"
 val log4catsV = "1.1.1"
 val specs2V = "4.10.0"
@@ -95,7 +95,7 @@ lazy val commonSettings = Seq(
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % betterMonadicForV),
 
   libraryDependencies ++= Seq(
-    "com.github.jnr"              %  "jnr-unixsocket"             % "0.28",
+    "com.github.jnr"              %  "jnr-unixsocket"             % "0.32",
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "alleycats-core"             % catsV,
 

@@ -25,9 +25,6 @@ import _root_.io.chrisdavenport.whaletail.Docker
 import _root_.org.http4s.ember.backdoor.EmberBackdoor
 
 object DockerExample extends IOApp {
-  // val unix = "unix://"
-  val dockerSocket = "/var/run/docker.sock"
-  // val localSocket = "/tmp/aSocket.sock"
 
   def run(args: List[String]): IO[ExitCode] = {
     val logger = Slf4jLogger.getLogger[IO]

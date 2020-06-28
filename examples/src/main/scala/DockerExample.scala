@@ -18,81 +18,43 @@ import org.http4s._
 import org.http4s.client.Client
 import org.http4s.implicits._
 import org.http4s.circe._
+import org.http4s.headers.Host
 
 import _root_.io.chrisdavenport.whaletail.UnixSocket
+import _root_.io.chrisdavenport.whaletail.Docker
 import _root_.org.http4s.ember.backdoor.EmberBackdoor
 
 object DockerExample extends IOApp {
-  // val unix = "unix://"
-  val dockerSocket = "/var/run/docker.sock"
-  // val localSocket = "/tmp/aSocket.sock"
 
   def run(args: List[String]): IO[ExitCode] = {
     val logger = Slf4jLogger.getLogger[IO]
     for {
       blocker <- Blocker[IO]
-      address = new UnixSocketAddress(dockerSocket)
-      socket <- UnixSocket.client[IO](address, blocker)
-      _ <- Resource.liftF(IO(println("Client Connected")))
+      client = Docker.default(blocker, logger)
 
       _ <- Resource.liftF(
-        socket.localAddress.flatTap(a => IO(println(a))) >>
-        socket.remoteAddress.flatTap(a => IO(println(a))) >>
-        socket.isOpen.flatTap(a => IO(println(a)))
+        client.expect[Json](Request[IO](Method.GET, uri"/info"))
+          .flatTap(a => logger.info(a.toString()))
       )
-
-      // context <- Resource.liftF(TLSContext.system[IO](blocker))
-      client <- Resource.liftF(createClient(socket, logger))
-      val req = Request[IO](Method.GET, uri"/info")
-          .withHeaders(org.http4s.headers.Host("cool"))
+      _ <- Resource.liftF(
+        client.expect[Json](Request[IO](Method.GET, uri"/version"))
+          .flatTap(a => logger.info(a.toString()))
+      )
       // _ <- Resource.liftF(
-      //   client.run(req).use(resp => 
-      //     logger.info(s"Response: $resp") >> 
-      //     resp.bodyAsText.compile.string.flatMap{
-      //       body => logger.info(s"Body: ..$body..")
-      //     }
-      //   )
+      //   client.expect[String](Request[IO](Method.GET, uri"/ping"))
+      //     .flatTap(a => logger.info(a.toString()))
       // )
-      // _ <- Resource.liftF(logger.info(s"Got: $json"))
 
-      _ <- Resource.liftF(
-        EmberBackdoor.requestEncoder[IO](req)
-        .through(socket.writes(10.seconds.some))
-        .compile
-        .drain
-      )
-      _ <- Resource.liftF(IO(println("Wrote Data Succesfully")))
-      _ <- Resource.liftF(
-        socket.reads( 32 * 1024, 10.seconds.some)
-          .debugChunks{ch => ch.toByteVector.toString()}
-          .through(fs2.text.utf8Decode)
-          .through(fs2.text.lines)
-          .evalMap(s => IO(println(s)))
-          .compile
-          .drain
-      )
+      // _ <- Resource.liftF(
+      //   client.expect[Json](Request[IO](Method.GET, uri"/containers/json")).flatTap(a => logger.info(a.toString()))
+      // )
+
+      // _ <- Resource.liftF(
+      //   client.expect[Json](Request[IO](Method.GET, uri"/images/json")).flatTap(a => logger.info(a.toString()))
+      // )
 
     } yield ()
     
   }.use(_ => IO(ExitCode.Success))
-
-  private def createClient[F[_]: Concurrent](socket: fs2.io.tcp.Socket[F], logger: Logger[F]): F[Client[F]] = {
-    Semaphore[F](1).map{ sem => 
-      Client{
-        req: Request[F] => 
-
-        Resource.make(sem.acquire)(_ => sem.release) >> 
-        Resource.liftF(
-          EmberBackdoor.requestEncoder(req)
-            .through(socket.writes(None))
-            .compile
-            .drain
-        ) >> 
-        EmberBackdoor.responseParser(4096, logger)(socket.reads( 32 * 1024))
-      }
-
-    }
-
-  }
 
 }

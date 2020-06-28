@@ -7,6 +7,7 @@ import fs2.Stream
 import org.http4s.ember.core.Parser
 import org.http4s.ember.core.Encoder
 
+// Note The Odd Package: Necessary as we are leverage Ember package private interfaces.
 object EmberBackdoor {
 
   def requestEncoder[F[_]: Sync](req: Request[F]): Stream[F, Byte] = Encoder.reqToBytes(req)

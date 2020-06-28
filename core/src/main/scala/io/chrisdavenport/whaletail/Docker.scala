@@ -42,7 +42,9 @@ object Docker {
           .through(socket.writes(requestIdleTimeout))
           .compile
           .drain
-      ) >> EmberBackdoor.responseParser(maxHeadersLength, logger)(socket.reads(maxResponseBytesRead, responseIdleTimeout))
+      ).flatMap(_ => 
+        EmberBackdoor.responseParser(maxHeadersLength, logger)(socket.reads(maxResponseBytesRead, responseIdleTimeout))
+      )
   )
 
 

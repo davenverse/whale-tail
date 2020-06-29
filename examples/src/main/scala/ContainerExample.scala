@@ -6,6 +6,8 @@ import io.chrisdavenport.whaletail.{
   Docker,
   Containers
 }
+import scala.concurrent.duration._
+import java.awt.Container
 
 object ContainersExample extends IOApp {
 
@@ -30,7 +32,15 @@ object ContainersExample extends IOApp {
       _ <- Resource.liftF(
         Containers.Operations.inspect(client, created.id).logInfo
       )
+
+      _ <- Resource.liftF(
+        Timer[IO].sleep(2.seconds) >> Containers.Operations.logs(client, created.id).logInfo
+    
+      )
+      _ <- Resource.liftF(Timer[IO].sleep(5.minutes))
     } yield ()
+    
+
   }.use(_ => IO.pure(ExitCode.Success))
 
 }

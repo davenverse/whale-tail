@@ -40,7 +40,16 @@ object Containers {
               List(
                 env.toList.map{case (key, value) => s"$key=$value"}
               ).asJson
-            ).asJson
+            ).asJson,
+            "HostConfig" -> Json.obj(
+              "PortBindings" -> Json.obj(
+                exposedPorts.toList.map(i => s"$i/tcp" -> Json.arr(
+                  Json.obj(
+                    "HostPort" -> s"$i".asJson
+                  )
+                )):_*
+              )
+            )
           ).dropNullValues
           )
       ).use{resp => 
@@ -72,6 +81,22 @@ object Containers {
           .setQueryParams(Map("t" -> waitBeforeKilling.map(_.toSeconds).toSeq))
       )
     )
+
+    def logs[F[_]: Sync](
+      client: Client[F],
+      id: String
+    ): F[String] = client.run(
+      Request[F](
+        Method.GET, 
+        (containersPrefix / id / "logs")
+          .setQueryParams(Map(
+            "follow" -> Seq(false),
+            "stdout" -> Seq(true),
+            "stderr" -> Seq(true),
+          ))
+      )
+    )
+      .use(_.bodyText.compile.string)
 
   }
 

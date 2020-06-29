@@ -151,7 +151,7 @@ object UnixSocket {
             }
           }
           val action = writeSemaphore.withPermit {
-            go(bytes.toBytes.toByteBuffer)
+            go(bytes.toByteBuffer)
           }
 
           timeout.fold(action)(time => action.timeout(time))

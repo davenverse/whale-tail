@@ -23,7 +23,7 @@ object Containers {
 
     private val containersPrefix = Docker.versionPrefix / "containers"
 
-    def create[F[_]: JsonDecoder: Bracket[*[_], Throwable]](
+    def create[F[_]: Sync](
       client: Client[F],
       image: String,
       exposedPorts: Map[Int, Int] = Map.empty, // Container Port, Host Port
@@ -31,29 +31,35 @@ object Containers {
     ) = 
       client.run(
         Request[F](Method.POST, containersPrefix / "create")
-          .withEntity(Json.obj(
-            "Image" -> image.asJson,
-            "ExposedPorts" -> Json.obj(
-              exposedPorts.toList.map{ case (i, _) => s"$i/tcp" -> Json.obj()}:_*
-            ),
-            "Env" -> Alternative[Option].guard(env.size > 0).as(
-              List(
-                env.toList.map{case (key, value) => s"$key=$value"}
-              ).asJson
-            ).asJson,
-            "HostConfig" -> Json.obj(
-              "PortBindings" -> Json.obj(
-                exposedPorts.toList.map{ case (container, host) => s"$container/tcp" -> Json.arr(
-                  Json.obj(
-                    "HostPort" -> s"$host".asJson
-                  )
-                )}:_*
+          .withEntity{
+            Json.obj(
+              "Image" -> image.asJson,
+              "ExposedPorts" -> Json.obj(
+                exposedPorts.toList.map{ case (i, _) => s"$i/tcp" -> Json.obj()}:_*
+              ),
+              "Env" -> Alternative[Option].guard(env.size > 0).as(
+                env.toList.map{case (key, value) => s"$key=$value"}.asJson
+              ).asJson,
+              "HostConfig" -> Json.obj(
+                "PortBindings" -> Json.obj(
+                  exposedPorts.toList.map{ case (container, host) => s"$container/tcp" -> Json.arr(
+                    Json.obj(
+                      "HostPort" -> s"$host".asJson
+                    )
+                  )}:_*
+                )
               )
-            )
-          ).dropNullValues
-          )
+            ).dropNullValues
+          }
       ).use{resp => 
-        JsonDecoder[F].asJsonDecode[Data.ContainerCreated](resp)
+        if (resp.status === Status.Created)
+          JsonDecoder[F].asJsonDecode[Data.ContainerCreated](resp) 
+        else 
+          resp.bodyAsText.compile.string.flatMap{body => 
+            ApplicativeError[F, Throwable].raiseError[Data.ContainerCreated](
+              Data.ContainersErrorResponse(resp.status, resp.headers, resp.httpVersion, body)
+            )
+          }
       }
 
     def inspect[F[_]: JsonDecoder: Bracket[*[_], Throwable]](
@@ -111,5 +117,8 @@ object Containers {
           ).mapN(ContainerCreated.apply)
       }
     }
+
+    final case class ContainersErrorResponse(status: Status, headers: Headers, httpVersion: HttpVersion, body: String) 
+      extends Throwable(show"Containers Response Not Expected - Status: $status, headers: $headers, httpVersion: $httpVersion, body:$body")
   }
 }

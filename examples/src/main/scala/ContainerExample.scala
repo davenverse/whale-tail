@@ -4,10 +4,10 @@ import cats.effect._
 import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
 import io.chrisdavenport.whaletail.{
   Docker,
-  Containers
+  Containers,
+  Images
 }
 import scala.concurrent.duration._
-import java.awt.Container
 
 object ContainersExample extends IOApp {
 
@@ -21,8 +21,11 @@ object ContainersExample extends IOApp {
     for {
       blocker <- Blocker[IO]
       client = Docker.default(blocker, logger)
+      _ <- Resource.liftF(
+        Images.Operations.createFromImage(client, "redis", "latest".some).logInfo
+      )
       created <- Resource.liftF(
-        Containers.Operations.create(client, "redis:latest", Set(6379)).logInfo
+        Containers.Operations.create(client, "redis:latest", Map(6379 -> 6379)).logInfo
       )
       _ <- Resource.make(
         Containers.Operations.start(client, created.id).logInfo

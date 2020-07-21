@@ -26,7 +26,7 @@ object Containers {
     def create[F[_]: JsonDecoder: Bracket[*[_], Throwable]](
       client: Client[F],
       image: String,
-      exposedPorts: Set[Int] = Set.empty,
+      exposedPorts: Map[Int, Int] = Map.empty, // Container Port, Host Port
       env: Map[String, String] = Map.empty
     ) = 
       client.run(
@@ -34,7 +34,7 @@ object Containers {
           .withEntity(Json.obj(
             "Image" -> image.asJson,
             "ExposedPorts" -> Json.obj(
-              exposedPorts.toList.map(i => s"$i/tcp" -> Json.obj()):_*
+              exposedPorts.toList.map{ case (i, _) => s"$i/tcp" -> Json.obj()}:_*
             ),
             "Env" -> Alternative[Option].guard(env.size > 0).as(
               List(
@@ -43,11 +43,11 @@ object Containers {
             ).asJson,
             "HostConfig" -> Json.obj(
               "PortBindings" -> Json.obj(
-                exposedPorts.toList.map(i => s"$i/tcp" -> Json.arr(
+                exposedPorts.toList.map{ case (container, host) => s"$container/tcp" -> Json.arr(
                   Json.obj(
-                    "HostPort" -> s"$i".asJson
+                    "HostPort" -> s"$host".asJson
                   )
-                )):_*
+                )}:_*
               )
             )
           ).dropNullValues

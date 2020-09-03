@@ -1,7 +1,7 @@
 package io.chrisdavenport.whaletail
 
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 
 import io.circe._

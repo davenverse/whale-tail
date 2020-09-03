@@ -1,4 +1,4 @@
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import fs2._
 import scala.concurrent.duration._

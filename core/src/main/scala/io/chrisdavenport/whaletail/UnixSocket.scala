@@ -1,6 +1,6 @@
 package io.chrisdavenport.whaletail
 
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import cats.effect.concurrent._
 import cats.effect.implicits._

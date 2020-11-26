@@ -1,4 +1,4 @@
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import cats.effect.concurrent._
 import io.circe._

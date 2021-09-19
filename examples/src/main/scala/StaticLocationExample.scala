@@ -1,7 +1,7 @@
 import cats.implicits._
 import cats.effect._
 import fs2._
-import fs2.io.net.unixsocket.UnixSocketAddress
+import fs2.io.net.unixsocket.{UnixSockets, UnixSocketAddress}
 import scala.concurrent.duration._
 import fs2.Chunk.ByteBuffer
 import scodec.bits.ByteVector
@@ -27,7 +27,7 @@ object StaticLocationExample extends IOApp {
     for {
       server <- EmberServerBuilder
         .default[IO]
-        .withUnixSocketConfig(localSocket)
+        .withUnixSocketConfig(UnixSockets[IO], localSocket)
         .withHttpApp(app)
         .withLogger(logger)
         .withErrorHandler({case e => logger.info(e)("Information").as(Response[IO](Status.InternalServerError))})
@@ -36,7 +36,7 @@ object StaticLocationExample extends IOApp {
 
       client <- EmberClientBuilder.default[IO].build.map(UnixSocket(localSocket))
       _ <- Resource.eval(IO.sleep(1.second))
-      resp <- client.run(Request[IO]().putHeaders(("Connection" -> "close")))
+      resp <- client.run(Request[IO]())
 
       _ <- Resource.eval(IO(println(resp)))
     } yield ()

@@ -1,7 +1,7 @@
 
 import cats.implicits._
 import cats.effect._
-import io.chrisdavenport.log4cats.slf4j.Slf4jLogger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import io.chrisdavenport.whaletail.{
   Docker,
   Containers,
@@ -19,12 +19,12 @@ object ContainersExample extends IOApp {
       def logInfo = fa.flatTap(a => logger.info(a.toString()))
     } 
     for {
-      blocker <- Blocker[IO]
-      client = Docker.default(blocker, logger)
-      _ <- Resource.liftF(
+
+      client <- Docker.client[IO]
+      _ <- Resource.eval(
         Images.Operations.createFromImage(client, "redis", "latest".some).logInfo
       )
-      created <- Resource.liftF(
+      created <- Resource.eval(
         Containers.Operations.create(client, "redis:latest", Map(6379 -> 6379)).logInfo
       )
       _ <- Resource.make(
@@ -32,15 +32,15 @@ object ContainersExample extends IOApp {
       )(_ => 
         Containers.Operations.stop(client, created.id, None).logInfo.void
       )
-      _ <- Resource.liftF(
+      _ <- Resource.eval(
         Containers.Operations.inspect(client, created.id).logInfo
       )
 
-      _ <- Resource.liftF(
-        Timer[IO].sleep(2.seconds) >> Containers.Operations.logs(client, created.id).logInfo
+      _ <- Resource.eval(
+        IO.sleep(2.seconds) >> Containers.Operations.logs(client, created.id).logInfo
     
       )
-      _ <- Resource.liftF(Timer[IO].sleep(5.minutes))
+      _ <- Resource.eval(IO.sleep(5.minutes))
     } yield ()
     
 

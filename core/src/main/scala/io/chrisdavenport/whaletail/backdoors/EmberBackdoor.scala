@@ -1,3 +1,4 @@
+/*
 package org.http4s.ember.backdoor
 
 import cats.effect._
@@ -16,4 +17,5 @@ object EmberBackdoor {
     Parser.Response.parser[F](maxHeaderLength)(s)(logger)
   
 }
+*/
 

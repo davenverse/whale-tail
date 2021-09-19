@@ -14,7 +14,7 @@ object Images {
 
     private val imagesPrefix = Docker.versionPrefix / "images"
 
-    def createFromImage[F[_]: Sync](//Bracket[*[_], Throwable]: JsonDecoder](
+    def createFromImage[F[_]: Concurrent](//Bracket[*[_], Throwable]: JsonDecoder](
       client: Client[F],
       image: String,
       tag: Option[String] = None

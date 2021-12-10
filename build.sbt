@@ -69,7 +69,7 @@ lazy val site = project.in(file("site"))
         "white-color" -> "#FFFFFF"
       ),
       micrositeCompilingDocsTool := WithMdoc,
-      scalacOptions in Tut --= Seq(
+      (Tut / scalacOptions) --= Seq(
         "-Xfatal-warnings",
         "-Ywarn-unused-import",
         "-Ywarn-numeric-widen",
@@ -141,9 +141,9 @@ inThisBuild(List(
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
 
   pomIncludeRepository := { _ => false},
-  scalacOptions in (Compile, doc) ++= Seq(
+  (Compile / doc / scalacOptions) ++= Seq(
       "-groups",
-      "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
+      "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
       "-doc-source-url", "https://github.com/ChristopherDavenport/whale-tail/blob/v" + version.value + "€{FILE_PATH}.scala"
   )
 ))

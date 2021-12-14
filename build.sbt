@@ -34,7 +34,7 @@ lazy val examples = project.in(file("examples"))
     name := "whale-tail-examples",
     libraryDependencies ++= Seq(
       "io.chrisdavenport"           %% "log4cats-slf4j"             % log4catsV,
-      "ch.qos.logback" % "logback-classic"      % "1.2.3"
+      "ch.qos.logback" % "logback-classic"      % "1.2.8"
     )
   )
 

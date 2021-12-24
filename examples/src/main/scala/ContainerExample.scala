@@ -11,8 +11,6 @@ import scala.concurrent.duration._
 
 object ContainersExample extends IOApp {
 
-  
-
   def run(args: List[String]): IO[ExitCode] = {
     val logger = Slf4jLogger.getLogger[IO]
     implicit class LogAll[A](fa: IO[A]){
@@ -25,7 +23,7 @@ object ContainersExample extends IOApp {
         Images.Operations.createFromImage(client, "redis", "latest".some).logInfo("createFromImage")
       )
       created <- Resource.eval(
-        Containers.Operations.create(client, "redis:latest", Map(6379 -> 6380)).logInfo("create")
+        Containers.Operations.create(client, "redis:latest", Map(6379 -> None)).logInfo("create")
       )
       _ <- Resource.make(
         Containers.Operations.start(client, created.id).logInfo("start")
@@ -40,7 +38,7 @@ object ContainersExample extends IOApp {
         IO.sleep(2.seconds) >> Containers.Operations.logs(client, created.id).logInfo("logs")
     
       )
-      _ <- Resource.eval(IO.sleep(30.minutes))
+      _ <- Resource.eval(IO.sleep(30.seconds))
     } yield ()
     
 

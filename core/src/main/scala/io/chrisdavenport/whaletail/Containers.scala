@@ -43,7 +43,7 @@ object Containers {
         else 
           resp.bodyText.compile.string.flatMap{body => 
             ApplicativeError[F, Throwable].raiseError[Json](
-              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+              Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
             )
           }
       )
@@ -82,7 +82,7 @@ object Containers {
         else 
           resp.bodyText.compile.string.flatMap{body => 
             ApplicativeError[F, Throwable].raiseError[Data.ContainerCreated](
-              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+              Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
             )
           }
       }
@@ -97,7 +97,7 @@ object Containers {
         if (resp.status === Status.Ok) JsonDecoder[F].asJson(resp)
         else resp.bodyText.compile.string.flatMap(body => 
           ApplicativeError[F, Throwable].raiseError[Json](
-            Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+            Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
           )
         )
       )
@@ -118,7 +118,7 @@ object Containers {
           else if (resp.status === Status.NotModified) false.pure[F]
           else resp.bodyText.compile.string.flatMap(body => 
             ApplicativeError[F, Throwable].raiseError(
-              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+              Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
             )
           )
       )
@@ -139,7 +139,7 @@ object Containers {
           else if (resp.status === Status.NotModified) false.pure[F]
           else resp.bodyText.compile.string.flatMap(body => 
             ApplicativeError[F, Throwable].raiseError(
-              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+              Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
             )
           )
         )
@@ -164,7 +164,7 @@ object Containers {
         if (resp.status === Status.Ok) resp.bodyText.compile.string
         else resp.bodyText.compile.string.flatMap(body => 
           ApplicativeError[F, Throwable].raiseError(
-            Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+            Data.ContainersErrorResponse(req.requestPrelude, resp.responsePrelude, body)
           )
         )
       }
@@ -183,7 +183,7 @@ object Containers {
       }
     }
 
-    final case class ContainersErrorResponse(req: RequestPrelude, status: Status, headers: Headers, httpVersion: HttpVersion, body: String) 
-      extends Throwable(show"Containers Response Not Expected for Request: $req -  Status: $status, headers: $headers, httpVersion: $httpVersion, body:$body")
+    final case class ContainersErrorResponse(req: RequestPrelude, resp: ResponsePrelude, body: String) 
+      extends Throwable(show"Containers Response Not Expected for Request: $req -  Status: ${resp.status}, headers: ${resp.headers}, httpVersion: ${resp.httpVersion}, body:$body")
   }
 }

@@ -23,7 +23,7 @@ object ContainersExample extends IOApp {
         Images.Operations.createFromImage(client, "redis", "latest".some).logInfo("createFromImage")
       )
       created <- Resource.eval(
-        Containers.Operations.create(client, "redis:latest", Map(6379 -> None)).logInfo("create")
+        Containers.Operations.create(client, "redis:latest", Map(6379 -> None), labels = Map("whale-identity" -> "whale-tail")).logInfo("create")
       )
       _ <- Resource.make(
         Containers.Operations.start(client, created.id).logInfo("start")

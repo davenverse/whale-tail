@@ -8,8 +8,9 @@ val circeV = "0.14.1"
 val log4catsV = "2.1.1"
 val specs2V = "4.11.0"
 
-ThisBuild / scalaVersion := "2.13.5"
-ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.12.14")
+ThisBuild / scalaVersion := "2.13.7"
+ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.12.15")
+
 
 
 // Projects
@@ -80,21 +81,3 @@ lazy val commonSettings = Seq(
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )
 )
-
-// General Settings
-inThisBuild(List(
-  organization := "io.chrisdavenport",
-  developers := List(
-    Developer("ChristopherDavenport", "Christopher Davenport", "chris@christopherdavenport.tech", url("https://github.com/ChristopherDavenport"))
-  ),
-
-  homepage := Some(url("https://github.com/ChristopherDavenport/whale-tail")),
-  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
-
-  pomIncludeRepository := { _ => false},
-  scalacOptions in (Compile, doc) ++= Seq(
-      "-groups",
-      "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
-      "-doc-source-url", "https://github.com/ChristopherDavenport/whale-tail/blob/v" + version.value + "€{FILE_PATH}.scala"
-  )
-))

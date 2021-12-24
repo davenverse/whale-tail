@@ -1,4 +1,4 @@
-package io.chrisdavenport.whaletailtesting
+package io.chrisdavenport.whaletail.manager
 
 import cats.syntax.all._
 import io.chrisdavenport.whaletail._
@@ -19,7 +19,7 @@ object ReadinessStrategy {
   import cats.effect.syntax.all._
   def checkReadiness[F[_]: Temporal](
     client: Client[F],
-    setup: WhaleTailTestContainer,
+    setup: WhaleTailContainer,
     strategy: ReadinessStrategy,
     timeout: Duration,
   ): F[Unit] = {

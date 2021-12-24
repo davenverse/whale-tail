@@ -1,4 +1,4 @@
-package io.chrisdavenport.whaletailtesting
+package io.chrisdavenport.whaletail.manager
 
 import io.chrisdavenport.whaletail._
 import cats.effect._
@@ -6,8 +6,8 @@ import cats.syntax.all._
 import io.circe._
 import cats.data._
 
-case class WhaleTailTestContainer(name: String, ports: Map[Int, (String, Int)], id: String)
-object WhaleTailTestContainer {
+case class WhaleTailContainer(name: String, ports: Map[Int, (String, Int)], id: String)
+object WhaleTailContainer {
   import org.http4s.client.Client
   def build[F[_]: Concurrent](
     client: Client[F],
@@ -16,7 +16,7 @@ object WhaleTailTestContainer {
     ports: Map[Int, Option[Int]],
     env: Map[String, String],
     labels: Map[String, String]
-  ): Resource[F,  WhaleTailTestContainer] = {
+  ): Resource[F,  WhaleTailContainer] = {
     for {
       img <- Resource.eval(
         Images.Operations.createFromImage(client, image, tag)
@@ -33,7 +33,7 @@ object WhaleTailTestContainer {
         Containers.Operations.inspect(client, created.id)
       )
       setup <- Resource.eval(
-        json.as[WhaleTailTestContainer](decoder(ports.keys.toList)).liftTo[F]
+        json.as[WhaleTailContainer](decoder(ports.keys.toList)).liftTo[F]
       )
     } yield setup
   }
@@ -50,8 +50,8 @@ object WhaleTailTestContainer {
     }
   }
   import io.circe._
-  def decoder(ports: List[Int]) = new Decoder[WhaleTailTestContainer]{
-    def apply(c: HCursor): Decoder.Result[WhaleTailTestContainer] = for {
+  def decoder(ports: List[Int]) = new Decoder[WhaleTailContainer]{
+    def apply(c: HCursor): Decoder.Result[WhaleTailContainer] = for {
       id <- c.downField("Id").as[String]
       name <- c.downField("Name").as[String]
       portsJson = c.downField("NetworkSettings").downField("Ports")
@@ -59,7 +59,7 @@ object WhaleTailTestContainer {
         portsJson.downField(s"$i/tcp").as[NonEmptyList[PortCombo]].map(a => a.head.host -> a.head.port).tupleLeft(i)
       )
     } yield {
-      WhaleTailTestContainer(name, out.toMap, id)
+      WhaleTailContainer(name, out.toMap, id)
     }
   }
 }

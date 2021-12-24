@@ -31,11 +31,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)},
   )
 
-lazy val testing = crossProject(JSPlatform, JVMPlatform)
+lazy val manager = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .dependsOn(core)
-  .in(file("testing"))
-  .settings(name := "whale-tail-testing")
+  .in(file("manager"))
+  .settings(name := "whale-tail-manager")
   .jvmSettings(
     libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
   )
@@ -47,7 +47,7 @@ lazy val examples = project.in(file("examples"))
   .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
   .settings(commonSettings)
-  .dependsOn(core.jvm, testing.jvm)
+  .dependsOn(core.jvm, manager.jvm)
   .settings(
     name := "whale-tail-examples",
     libraryDependencies ++= Seq(

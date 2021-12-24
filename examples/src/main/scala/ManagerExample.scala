@@ -8,9 +8,9 @@ import io.chrisdavenport.whaletail.{
   Images
 }
 import scala.concurrent.duration._
-import io.chrisdavenport.whaletailtesting._
+import io.chrisdavenport.whaletail.manager._
 
-object ATestApp extends IOApp {
+object TestingExample extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     val logger = Slf4jLogger.getLogger[IO]
@@ -19,14 +19,12 @@ object ATestApp extends IOApp {
     } 
     for {
       client <- Docker.client[IO]
-      setup <- WhaleTailTestContainer.build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)
-      _ <- Resource.eval(
-        logger.info(s"$setup")
-      )
+      container <- WhaleTailContainer.build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)
+      _ <- Resource.eval(logger.info(s"$container"))
       _ <- Resource.eval(
         ReadinessStrategy.checkReadiness(
           client,
-          setup, 
+          container, 
           ReadinessStrategy.LogRegex(".*Ready to accept connections.*\\s".r),
           30.seconds
         )

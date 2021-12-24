@@ -32,7 +32,7 @@ lazy val examples = project.in(file("examples"))
     name := "whale-tail-examples",
     libraryDependencies ++= Seq(
       "org.typelevel"           %% "log4cats-slf4j"             % log4catsV,
-      "ch.qos.logback" % "logback-classic"      % "1.2.3",
+      "ch.qos.logback" % "logback-classic"      % "1.2.10",
       "org.http4s"                  %% "http4s-ember-server"        % http4sV,
       "com.github.jnr" % "jnr-unixsocket" % "0.38.11",
     )

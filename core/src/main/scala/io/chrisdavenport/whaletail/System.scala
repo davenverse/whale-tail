@@ -8,13 +8,17 @@ import org.http4s.circe._
 
 object System {
   object Operations {
-    def info[F[_]: Concurrent](client: Client[F]): F[Json] = 
-      client.expect[Json](Request[F](Method.GET, Docker.versionPrefix / "info"))
+    def info[F[_]: Concurrent](client: Client[F], 
+      baseUri: Uri = Docker.versionPrefix
+    ): F[Json] = 
+      client.expect[Json](Request[F](Method.GET, baseUri / "info"))
 
-    def version[F[_]: Concurrent](client: Client[F]): F[Json] = 
-      client.expect[Json](Request[F](Method.GET, Docker.versionPrefix / "version"))
+    def version[F[_]: Concurrent](client: Client[F],
+      baseUri: Uri = Docker.versionPrefix): F[Json] = 
+      client.expect[Json](Request[F](Method.GET, baseUri / "version"))
 
-    def ping[F[_]: Concurrent](client: Client[F]): F[Boolean] = 
-      client.successful(Request[F](Method.HEAD, Docker.versionPrefix / "_ping"))
+    def ping[F[_]: Concurrent](client: Client[F],
+      baseUri: Uri = Docker.versionPrefix): F[Boolean] = 
+      client.successful(Request[F](Method.HEAD, baseUri / "_ping"))
   }
 }

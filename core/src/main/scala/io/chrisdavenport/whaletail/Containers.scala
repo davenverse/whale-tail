@@ -23,14 +23,39 @@ object Containers {
 
     private val containersPrefix = Docker.versionPrefix / "containers"
 
+    def list[F[_]: Concurrent](
+      client: Client[F],
+      all: Boolean = false,
+      limit: Option[Int] = None,
+      size: Boolean = false,
+      filters: Map[String, List[String]] = Map.empty
+    ) = {
+      val base = containersPrefix / "json"
+      val uri = base.withQueryParam("all", all.toString())
+        .withOptionQueryParam("limit", limit.map(_.toString))
+        .withQueryParam("size", size.toString())
+        .withQueryParam("filters", filters.asJson.printWith(Printer.noSpaces))
+      val req = Request[F](Method.GET, uri)
+
+      client.run(req).use(resp => 
+        if (resp.status === Status.Ok)
+          JsonDecoder[F].asJsonDecode[Json](resp) 
+        else 
+          resp.bodyText.compile.string.flatMap{body => 
+            ApplicativeError[F, Throwable].raiseError[Json](
+              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+            )
+          }
+      )
+    }
+
     def create[F[_]: Concurrent](
       client: Client[F],
       image: String,
       exposedPorts: Map[Int, Option[Int]] = Map.empty, // Container Port, Host Port (None binds random)
       env: Map[String, String] = Map.empty
-    ) = 
-      client.run(
-        Request[F](Method.POST, containersPrefix / "create")
+    ) = {
+      val req = Request[F](Method.POST, containersPrefix / "create")
           .withEntity{
             Json.obj(
               "Image" -> image.asJson,
@@ -51,51 +76,74 @@ object Containers {
               )
             ).dropNullValues
           }
-      ).use{resp => 
+      client.run(req).use{resp => 
         if (resp.status === Status.Created)
           JsonDecoder[F].asJsonDecode[Data.ContainerCreated](resp) 
         else 
           resp.bodyText.compile.string.flatMap{body => 
             ApplicativeError[F, Throwable].raiseError[Data.ContainerCreated](
-              Data.ContainersErrorResponse(resp.status, resp.headers, resp.httpVersion, body)
+              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
             )
           }
       }
+    }
 
     def inspect[F[_]: JsonDecoder: Concurrent](
       client: Client[F],
       id: String
-    ) = client.run(
-      Request[F](Method.GET, containersPrefix / id / "json")
-    ).use(resp => 
-      JsonDecoder[F].asJson(resp)
-    )
+    ) = {
+      val req = Request[F](Method.GET, containersPrefix / id / "json")
+      client.run(req).use(resp => 
+        if (resp.status === Status.Ok) JsonDecoder[F].asJson(resp)
+        else resp.bodyText.compile.string.flatMap(body => 
+          ApplicativeError[F, Throwable].raiseError[Json](
+            Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+          )
+        )
+      )
+    }
 
 
     def start[F[_]: Concurrent](
       client: Client[F],
       id: String
-    ): F[Status]= client.run(
-      Request[F](Method.POST, 
-        containersPrefix / id / "start",
-        headers = Headers(org.http4s.headers.`Content-Length`(0)) // This is here, because without it this call fails
+    ): F[Boolean]= {
+      val req = Request[F](Method.POST, 
+          containersPrefix / id / "start",
+          headers = Headers(org.http4s.headers.`Content-Length`(0)) // This is here, because without it this call fails
+        )
+      client.run(req).use(
+        resp => 
+          if (resp.status === Status.NoContent) true.pure[F]
+          else if (resp.status === Status.NotModified) false.pure[F]
+          else resp.bodyText.compile.string.flatMap(body => 
+            ApplicativeError[F, Throwable].raiseError(
+              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+            )
+          )
       )
-    ).use(
-      resp => 
-        resp.status.pure[F]
-    )
+  }
 
     def stop[F[_]: Concurrent](
       client: Client[F],
       id: String,
       waitBeforeKilling: Option[FiniteDuration] = None
-    ): F[Status] = client.status(
-      Request[F](
-        Method.POST, 
-        (containersPrefix / id / "stop")
-          .setQueryParams(Map("t" -> waitBeforeKilling.map(_.toSeconds).toSeq))
-      )
-    )
+    ): F[Boolean] = {
+      val req = Request[F](
+          Method.POST, 
+          (containersPrefix / id / "stop")
+            .setQueryParams(Map("t" -> waitBeforeKilling.map(_.toSeconds).toSeq))
+        )
+      client.run(req).use(resp => 
+          if (resp.status === Status.NoContent) true.pure[F]
+          else if (resp.status === Status.NotModified) false.pure[F]
+          else resp.bodyText.compile.string.flatMap(body => 
+            ApplicativeError[F, Throwable].raiseError(
+              Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+            )
+          )
+        )
+    }
 
     def logs[F[_]: Concurrent](
       client: Client[F],
@@ -127,7 +175,7 @@ object Containers {
       }
     }
 
-    final case class ContainersErrorResponse(status: Status, headers: Headers, httpVersion: HttpVersion, body: String) 
-      extends Throwable(show"Containers Response Not Expected - Status: $status, headers: $headers, httpVersion: $httpVersion, body:$body")
+    final case class ContainersErrorResponse(req: RequestPrelude, status: Status, headers: Headers, httpVersion: HttpVersion, body: String) 
+      extends Throwable(show"Containers Response Not Expected for Request: $req -  Status: $status, headers: $headers, httpVersion: $httpVersion, body:$body")
   }
 }

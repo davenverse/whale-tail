@@ -1,5 +1,5 @@
 
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import io.chrisdavenport.whaletail.{

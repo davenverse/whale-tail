@@ -1,4 +1,4 @@
-import cats.implicits._
+
 import cats.effect._
 import io.circe._
 import fs2._

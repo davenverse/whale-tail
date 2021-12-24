@@ -1,3 +1,4 @@
+/*
 package io.chrisdavenport.whaletail
 
 import cats.implicits._
@@ -198,3 +199,4 @@ object UnixSocket {
 
 
 }
+*/

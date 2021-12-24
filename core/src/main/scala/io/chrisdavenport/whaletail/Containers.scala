@@ -23,7 +23,7 @@ object Containers {
 
     private val containersPrefix = Docker.versionPrefix / "containers"
 
-    def create[F[_]: Sync](
+    def create[F[_]: Concurrent](
       client: Client[F],
       image: String,
       exposedPorts: Map[Int, Int] = Map.empty, // Container Port, Host Port
@@ -55,14 +55,14 @@ object Containers {
         if (resp.status === Status.Created)
           JsonDecoder[F].asJsonDecode[Data.ContainerCreated](resp) 
         else 
-          resp.bodyAsText.compile.string.flatMap{body => 
+          resp.bodyText.compile.string.flatMap{body => 
             ApplicativeError[F, Throwable].raiseError[Data.ContainerCreated](
               Data.ContainersErrorResponse(resp.status, resp.headers, resp.httpVersion, body)
             )
           }
       }
 
-    def inspect[F[_]: JsonDecoder: Bracket[*[_], Throwable]](
+    def inspect[F[_]: JsonDecoder: Concurrent](
       client: Client[F],
       id: String
     ) = client.run(
@@ -71,12 +71,12 @@ object Containers {
       JsonDecoder[F].asJson(resp)
     )
 
-    def start[F[_]: Bracket[*[_], Throwable]](
+    def start[F[_]: Concurrent](
       client: Client[F],
       id: String
     ): F[Status] = client.status(Request[F](Method.POST, containersPrefix / id / "start"))
 
-    def stop[F[_]: Bracket[*[_], Throwable]](
+    def stop[F[_]: Concurrent](
       client: Client[F],
       id: String,
       waitBeforeKilling: Option[FiniteDuration] = None
@@ -88,7 +88,7 @@ object Containers {
       )
     )
 
-    def logs[F[_]: Sync](
+    def logs[F[_]: Concurrent](
       client: Client[F],
       id: String
     ): F[String] = client.run(

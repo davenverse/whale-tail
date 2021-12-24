@@ -147,20 +147,28 @@ object Containers {
 
     def logs[F[_]: Concurrent](
       client: Client[F],
-      id: String
-    ): F[String] = client.run(
-      Request[F](
-        Method.GET, 
-        (containersPrefix / id / "logs")
-          .setQueryParams(Map(
-            "follow" -> Seq(false),
-            "stdout" -> Seq(true),
-            "stderr" -> Seq(true),
-          ))
-      )
-    )
-      .use(_.bodyText.compile.string)
-
+      id: String,
+      stdout: Boolean = true,
+      stderr: Boolean = false,
+    ): F[String] = {
+      val req = Request[F](
+          Method.GET, 
+          (containersPrefix / id / "logs")
+            .setQueryParams(Map(
+              "follow" -> Seq(false),
+              "stdout" -> Seq(stdout),
+              "stderr" -> Seq(stderr),
+            ))
+        )
+      client.run(req).use{resp => 
+        if (resp.status === Status.Ok) resp.bodyText.compile.string
+        else resp.bodyText.compile.string.flatMap(body => 
+          ApplicativeError[F, Throwable].raiseError(
+            Data.ContainersErrorResponse(req.requestPrelude, resp.status, resp.headers, resp.httpVersion, body)
+          )
+        )
+      }
+    }
   }
 
   object Data {

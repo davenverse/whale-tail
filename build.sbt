@@ -34,7 +34,7 @@ lazy val examples = project.in(file("examples"))
       "org.typelevel"           %% "log4cats-slf4j"             % log4catsV,
       "ch.qos.logback" % "logback-classic"      % "1.2.3",
       "org.http4s"                  %% "http4s-ember-server"        % http4sV,
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.11",
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.15",
     )
   )
 

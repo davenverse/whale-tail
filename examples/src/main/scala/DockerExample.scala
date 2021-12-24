@@ -17,7 +17,7 @@ import org.http4s.implicits._
 import org.http4s.circe._
 import org.http4s.headers.Host
 
-import _root_.io.chrisdavenport.whaletail.Docker
+import _root_.io.chrisdavenport.whaletail._
 
 object DockerExample extends IOApp {
 
@@ -26,14 +26,16 @@ object DockerExample extends IOApp {
     for {
       client <- Docker.client[IO]
 
-      _ <- Resource.eval(
-        client.expect[Json](Request[IO](Method.GET, uri"/info"))
-          .flatTap(a => logger.info(a.toString()))
-      )
-      _ <- Resource.eval(
-        client.expect[Json](Request[IO](Method.GET, uri"/version"))
-          .flatTap(a => logger.info(a.toString()))
-      )
+      _ <- Resource.eval(Containers.Operations.list(client, true).flatTap(a => logger.info(a.toString())))
+
+      // _ <- Resource.eval(
+      //   client.expect[Json](Request[IO](Method.GET, uri"/info"))
+      //     .flatTap(a => logger.info(a.toString()))
+      // )
+      // _ <- Resource.eval(
+      //   client.expect[Json](Request[IO](Method.GET, uri"/version"))
+      //     .flatTap(a => logger.info(a.toString()))
+      // )
 
     } yield ()
     

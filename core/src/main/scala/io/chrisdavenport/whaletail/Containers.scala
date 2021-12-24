@@ -13,10 +13,6 @@ import org.http4s.circe._
 import scala.concurrent.duration.FiniteDuration
 import cats.data.NonEmptyMapOps
 
-trait Containers[F[_]]{
-  def create(image: String, name: Option[String]): F[Json]
-}
-
 object Containers {
 
   object Operations {

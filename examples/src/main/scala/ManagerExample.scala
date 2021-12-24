@@ -10,23 +10,20 @@ import io.chrisdavenport.whaletail.{
 import scala.concurrent.duration._
 import io.chrisdavenport.whaletail.manager._
 
-object TestingExample extends IOApp {
+object ManagerExample extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
-    val logger = Slf4jLogger.getLogger[IO]
-    implicit class LogAll[A](fa: IO[A]){
-      def logInfo(tag: String) = fa.flatTap(a => logger.info(tag ++ ": " ++ a.toString()))
-    } 
     for {
       client <- Docker.client[IO]
       container <- WhaleTailContainer.build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)
-        .evalTap(ReadinessStrategy.checkReadiness(
-          client,
-          _, 
-          ReadinessStrategy.LogRegex(".*Ready to accept connections.*\\s".r),
-          30.seconds
-        ))
-      _ <- Resource.eval(logger.info(s"$container"))
+        .evalTap(
+          ReadinessStrategy.checkReadiness(
+            client,
+            _, 
+            ReadinessStrategy.LogRegex(".*Ready to accept connections.*\\s".r),
+            30.seconds
+          )
+        )
     } yield ()
     
 

@@ -47,12 +47,16 @@ object Containers {
       image: String,
       exposedPorts: Map[Int, Option[Int]] = Map.empty, // Container Port, Host Port (None binds random)
       env: Map[String, String] = Map.empty,
+      labels: Map[String, String] = Map.empty,
       baseUri: Uri = Docker.versionPrefix
     ): F[Data.ContainerCreated] = {
       val req = Request[F](Method.POST, containersPrefix(baseUri) / "create")
           .withEntity{
             Json.obj(
               "Image" -> image.asJson,
+              "Labels" -> Json.obj(
+                labels.mapValues(Json.fromString(_)).toSeq:_*
+              ),
               "ExposedPorts" -> Json.obj(
                 exposedPorts.toList.map{ case (i, _) => s"$i/tcp" -> Json.obj()}:_*
               ),

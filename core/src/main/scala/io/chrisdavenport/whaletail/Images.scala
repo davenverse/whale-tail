@@ -15,16 +15,17 @@ import cats.ApplicativeThrow
 object Images {
   object Operations {
 
-    private val imagesPrefix = Docker.versionPrefix / "images"
+    private val imagesPrefix = (baseUri: Uri) =>  baseUri / "images"
 
     def list[F[_]: Concurrent](
       client: Client[F],
       all: Boolean = false,
       filters: Map[String, List[String]] = Map.empty,
-      digests: Boolean = false
+      digests: Boolean = false,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Json] = {
-      val baseUri = imagesPrefix / "json"
-      val uri = baseUri.withQueryParam("all", all)
+      val uriI = imagesPrefix(baseUri) / "json"
+      val uri = uriI.withQueryParam("all", all)
         .withQueryParam("filters", filters.asJson.printWith(Printer.noSpaces))
         .withQueryParam("digests", digests)
       val req = Request[F](Method.GET, uri)
@@ -37,11 +38,12 @@ object Images {
     def createFromImage[F[_]: Concurrent](//Bracket[*[_], Throwable]: JsonDecoder](
       client: Client[F],
       image: String,
-      tag: Option[String] = None
+      tag: Option[String] = None,
+      baseUri: Uri = Docker.versionPrefix
     ): F[String] = {
       val req = Request[F](
         Method.POST, 
-        (imagesPrefix / "create").setQueryParams(Map(
+        (imagesPrefix(baseUri) / "create").setQueryParams(Map(
             "fromImage" -> Seq(image),
             "tag" ->  tag.toSeq
         ))

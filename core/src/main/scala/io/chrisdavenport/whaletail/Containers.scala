@@ -17,16 +17,17 @@ object Containers {
 
   object Operations {
 
-    private val containersPrefix = Docker.versionPrefix / "containers"
+    private val containersPrefix = (uri: Uri) => uri / "containers"
 
     def list[F[_]: Concurrent](
       client: Client[F],
       all: Boolean = false,
       limit: Option[Int] = None,
       size: Boolean = false,
-      filters: Map[String, List[String]] = Map.empty
+      filters: Map[String, List[String]] = Map.empty,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Json] = {
-      val base = containersPrefix / "json"
+      val base = containersPrefix(baseUri) / "json"
       val uri = base.withQueryParam("all", all.toString())
         .withOptionQueryParam("limit", limit.map(_.toString))
         .withQueryParam("size", size.toString())
@@ -45,9 +46,10 @@ object Containers {
       client: Client[F],
       image: String,
       exposedPorts: Map[Int, Option[Int]] = Map.empty, // Container Port, Host Port (None binds random)
-      env: Map[String, String] = Map.empty
+      env: Map[String, String] = Map.empty,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Data.ContainerCreated] = {
-      val req = Request[F](Method.POST, containersPrefix / "create")
+      val req = Request[F](Method.POST, containersPrefix(baseUri) / "create")
           .withEntity{
             Json.obj(
               "Image" -> image.asJson,
@@ -78,9 +80,10 @@ object Containers {
 
     def inspect[F[_]: JsonDecoder: Concurrent](
       client: Client[F],
-      id: String
+      id: String,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Json] = {
-      val req = Request[F](Method.GET, containersPrefix / id / "json")
+      val req = Request[F](Method.GET, containersPrefix(baseUri) / id / "json")
       client.run(req).use(resp => 
         if (resp.status === Status.Ok) JsonDecoder[F].asJson(resp)
         else Data.ContainersErrorResponse.raise(req, resp)
@@ -90,11 +93,12 @@ object Containers {
 
     def start[F[_]: Concurrent](
       client: Client[F],
-      id: String
+      id: String,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Boolean]= {
       val req = Request[F](
         Method.POST, 
-        containersPrefix / id / "start",
+        containersPrefix(baseUri) / id / "start",
         headers = Headers(org.http4s.headers.`Content-Length`(0)) // This is here, because without it this call fails
       )
       client.run(req).use(resp => 
@@ -107,11 +111,12 @@ object Containers {
     def stop[F[_]: Concurrent](
       client: Client[F],
       id: String,
-      waitBeforeKilling: Option[FiniteDuration] = None
+      waitBeforeKilling: Option[FiniteDuration] = None,
+      baseUri: Uri = Docker.versionPrefix
     ): F[Boolean] = {
       val req = Request[F](
           Method.POST, 
-          (containersPrefix / id / "stop")
+          (containersPrefix(baseUri) / id / "stop")
             .setQueryParams(Map("t" -> waitBeforeKilling.map(_.toSeconds).toSeq))
         )
       client.run(req).use(resp => 
@@ -126,10 +131,11 @@ object Containers {
       id: String,
       stdout: Boolean = true,
       stderr: Boolean = false,
+      baseUri: Uri = Docker.versionPrefix
     ): F[String] = {
       val req = Request[F](
           Method.GET, 
-          (containersPrefix / id / "logs")
+          (containersPrefix(baseUri) / id / "logs")
             .setQueryParams(Map(
               "follow" -> Seq(false),
               "stdout" -> Seq(stdout),

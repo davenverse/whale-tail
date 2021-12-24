@@ -21,7 +21,7 @@ import org.http4s.client.middleware.UnixSocket
 
 object Docker {
 
-  val versionPrefix: Uri = uri"http:/v1.40"
+  val versionPrefix: Uri = uri"http://v1.41"
 
   def client[F[_]: Async]: Resource[F, Client[F]] = {
     EmberClientBuilder

@@ -34,18 +34,6 @@ object DockerExample extends IOApp {
         client.expect[Json](Request[IO](Method.GET, uri"/version"))
           .flatTap(a => logger.info(a.toString()))
       )
-      // _ <- Resource.liftF(
-      //   client.expect[String](Request[IO](Method.GET, uri"/ping"))
-      //     .flatTap(a => logger.info(a.toString()))
-      // )
-
-      // _ <- Resource.liftF(
-      //   client.expect[Json](Request[IO](Method.GET, uri"/containers/json")).flatTap(a => logger.info(a.toString()))
-      // )
-
-      // _ <- Resource.liftF(
-      //   client.expect[Json](Request[IO](Method.GET, uri"/images/json")).flatTap(a => logger.info(a.toString()))
-      // )
 
     } yield ()
     

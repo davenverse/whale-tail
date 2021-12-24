@@ -1,15 +1,12 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 val catsV = "2.1.1"
-val catsEffectV = "3.2.8"
-val fs2V = "3.1.2"
-val http4sV = "0.23-14-de2e0b7-SNAPSHOT"
+val catsEffectV = "3.3.1"
+val fs2V = "3.2.3"
+val http4sV = "0.23.7"
 val circeV = "0.14.1"
 val log4catsV = "2.1.1"
 val specs2V = "4.11.0"
-
-val kindProjectorV = "0.11.0"
-val betterMonadicForV = "0.3.1"
 
 ThisBuild / scalaVersion := "2.13.5"
 ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.12.14")

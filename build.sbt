@@ -8,9 +8,7 @@ val circeV = "0.14.1"
 val log4catsV = "2.1.1"
 val specs2V = "4.11.0"
 
-ThisBuild / scalaVersion := "2.13.7"
-ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.12.15")
-
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7")
 
 
 // Projects

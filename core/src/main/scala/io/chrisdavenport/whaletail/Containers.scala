@@ -26,7 +26,7 @@ object Containers {
     def create[F[_]: Concurrent](
       client: Client[F],
       image: String,
-      exposedPorts: Map[Int, Int] = Map.empty, // Container Port, Host Port
+      exposedPorts: Map[Int, Option[Int]] = Map.empty, // Container Port, Host Port (None binds random)
       env: Map[String, String] = Map.empty
     ) = 
       client.run(
@@ -44,7 +44,7 @@ object Containers {
                 "PortBindings" -> Json.obj(
                   exposedPorts.toList.map{ case (container, host) => s"$container/tcp" -> Json.arr(
                     Json.obj(
-                      "HostPort" -> s"$host".asJson
+                      "HostPort" -> s"${host.getOrElse("")}".asJson
                     )
                   )}:_*
                 )

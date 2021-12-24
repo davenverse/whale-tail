@@ -71,10 +71,19 @@ object Containers {
       JsonDecoder[F].asJson(resp)
     )
 
+
     def start[F[_]: Concurrent](
       client: Client[F],
       id: String
-    ): F[Status] = client.status(Request[F](Method.POST, containersPrefix / id / "start"))
+    ): F[Status]= client.run(
+      Request[F](Method.POST, 
+        containersPrefix / id / "start",
+        headers = Headers(org.http4s.headers.`Content-Length`(0)) // This is here, because without it this call fails
+      )
+    ).use(
+      resp => 
+        resp.status.pure[F]
+    )
 
     def stop[F[_]: Concurrent](
       client: Client[F],

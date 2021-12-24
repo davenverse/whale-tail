@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val catsV = "2.1.1"
+val catsV = "2.7.0"
 val catsEffectV = "3.3.1"
 val fs2V = "3.2.3"
 val http4sV = "0.23.7"
@@ -32,9 +32,9 @@ lazy val examples = project.in(file("examples"))
     name := "whale-tail-examples",
     libraryDependencies ++= Seq(
       "org.typelevel"           %% "log4cats-slf4j"             % log4catsV,
-      "ch.qos.logback" % "logback-classic"      % "1.2.3",
+      "ch.qos.logback" % "logback-classic"      % "1.2.10",
       "org.http4s"                  %% "http4s-ember-server"        % http4sV,
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.11",
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.15",
     )
   )
 
@@ -74,6 +74,9 @@ lazy val commonSettings = Seq(
 
     "org.typelevel"                %% "log4cats-core"              % log4catsV,
     "org.typelevel"           %% "log4cats-testing"           % log4catsV     % Test,
+    "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
+
+    "org.typelevel" %% "cats-effect-testing-specs2" % "1.4.0" % Test,
 
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test

@@ -75,6 +75,8 @@ lazy val commonSettings = Seq(
     "org.typelevel"                %% "log4cats-core"              % log4catsV,
     "org.typelevel"           %% "log4cats-testing"           % log4catsV     % Test,
 
+    "org.typelevel" %% "cats-effect-testing-specs2" % "1.4.0" % Test,
+
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test
   )

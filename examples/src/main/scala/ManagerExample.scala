@@ -20,15 +20,13 @@ object TestingExample extends IOApp {
     for {
       client <- Docker.client[IO]
       container <- WhaleTailContainer.build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)
-      _ <- Resource.eval(logger.info(s"$container"))
-      _ <- Resource.eval(
-        ReadinessStrategy.checkReadiness(
+        .evalTap(ReadinessStrategy.checkReadiness(
           client,
-          container, 
+          _, 
           ReadinessStrategy.LogRegex(".*Ready to accept connections.*\\s".r),
           30.seconds
-        )
-      )
+        ))
+      _ <- Resource.eval(logger.info(s"$container"))
     } yield ()
     
 

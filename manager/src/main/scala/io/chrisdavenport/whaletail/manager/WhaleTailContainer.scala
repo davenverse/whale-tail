@@ -40,7 +40,7 @@ object WhaleTailContainer {
 
   private case class PortCombo(host: String, port: Int)
   private object PortCombo {
-    implicit val decoder = new Decoder[PortCombo]{
+    implicit val decoder: Decoder[PortCombo] = new Decoder[PortCombo]{
       def apply(c: HCursor): Decoder.Result[PortCombo] = for {
         host <- c.downField("HostIp").as[String]
         t = c.downField("HostPort")
@@ -50,7 +50,7 @@ object WhaleTailContainer {
     }
   }
   import io.circe._
-  def decoder(ports: List[Int]) = new Decoder[WhaleTailContainer]{
+  def decoder(ports: List[Int]): Decoder[WhaleTailContainer] = new Decoder[WhaleTailContainer]{
     def apply(c: HCursor): Decoder.Result[WhaleTailContainer] = for {
       id <- c.downField("Id").as[String]
       name <- c.downField("Name").as[String]

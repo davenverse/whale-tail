@@ -6,16 +6,15 @@ val fs2V = "3.2.3"
 val http4sV = "0.23.7"
 val circeV = "0.14.1"
 val log4catsV = "2.1.1"
-val specs2V = "4.13.1"
 
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7")
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.7", "3.1.0")
 
 
 // Projects
 lazy val `whale-tail` = project.in(file("."))
   .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
-  .aggregate(core.jvm, core.js, examples)
+  .aggregate(core.jvm, core.js, manager.jvm, manager.js, examples)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
 .crossType(CrossType.Pure)
@@ -97,8 +96,5 @@ lazy val commonSettings = Seq(
     
 
     "org.typelevel" %%% "cats-effect-testing-specs2" % "1.4.0" % Test,
-
-    "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
-    "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test
   )
 )

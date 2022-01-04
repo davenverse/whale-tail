@@ -34,7 +34,7 @@ object Docker {
       .map(withHost(_))
   }
 
-  def tls[F[_]: Async](baseUri: Uri): Resource[F, Client[F]] = {
+  def tcp[F[_]: Async](baseUri: Uri): Resource[F, Client[F]] = {
     EmberClientBuilder
       .default[F]
       .build
@@ -59,7 +59,7 @@ object Docker {
     baseUriSOpt <- Resource.eval(Sync[F].delay(sys.env.get("DOCKER_HOST")))
     base <- Resource.eval(baseUriSOpt.traverse(parseConnection[F]))
     out <- base match {
-      case Some(Left(baseUri)) => tls(baseUri)
+      case Some(Left(baseUri)) => tcp(baseUri)
       case Some(Right(socket)) => unixSocket(socket)
       case None => unixSocket(defaultUnixSocketAddress)
     }

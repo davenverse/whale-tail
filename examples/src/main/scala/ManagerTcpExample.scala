@@ -24,7 +24,7 @@ object ManagerTcpExample extends IOApp {
   // You can use it explicitly like below or use
   // Docker.default
 
-  val resource = Docker.tls[IO](uri"tcp://localhost:1234")
+  val resource = Docker.tcp[IO](uri"tcp://localhost:1234")
     .flatMap(client =>
       WhaleTailContainer
         .build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)

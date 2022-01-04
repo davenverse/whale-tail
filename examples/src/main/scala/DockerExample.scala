@@ -24,7 +24,7 @@ object DockerExample extends IOApp {
   def run(args: List[String]): IO[ExitCode] = {
     val logger = Slf4jLogger.getLogger[IO]
     for {
-      client <- Docker.client[IO]
+      client <- Docker.default[IO]
 
       _ <- Resource.eval(Containers.Operations.list(client, true).flatTap(a => logger.info(a.toString())))
 

@@ -14,7 +14,7 @@ object ManagerExample extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] = {
     for {
-      client <- Docker.client[IO]
+      client <- Docker.default[IO].map(org.http4s.client.middleware.Logger(true, false))
       container <- WhaleTailContainer.build(client, "redis", "latest".some, Map(6379 -> None), Map.empty, Map.empty)
         .evalTap(
           ReadinessStrategy.checkReadiness(

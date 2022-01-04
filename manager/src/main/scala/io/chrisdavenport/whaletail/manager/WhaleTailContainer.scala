@@ -5,6 +5,7 @@ import cats.effect._
 import cats.syntax.all._
 import io.circe._
 import cats.data._
+import org.http4s.Uri
 
 case class WhaleTailContainer(name: String, ports: Map[Int, (String, Int)], id: String)
 object WhaleTailContainer {
@@ -15,22 +16,23 @@ object WhaleTailContainer {
     tag: Option[String],
     ports: Map[Int, Option[Int]],
     env: Map[String, String],
-    labels: Map[String, String]
+    labels: Map[String, String],
+    baseUri: Uri = Docker.versionPrefix
   ): Resource[F,  WhaleTailContainer] = {
     for {
       img <- Resource.eval(
-        Images.Operations.createFromImage(client, image, tag)
+        Images.Operations.createFromImage(client, image, tag, baseUri = baseUri)
       )
       created <- Resource.eval(
-        Containers.Operations.create(client, s"$image${tag.map(s => s":$s").getOrElse("")}", ports, labels = Map("whale-identity" -> "whale-tail") ++ labels)
+        Containers.Operations.create(client, s"$image${tag.map(s => s":$s").getOrElse("")}", ports, labels = Map("whale-identity" -> "whale-tail") ++ labels, baseUri = baseUri)
       )
       _ <- Resource.make(
-        Containers.Operations.start(client, created.id)
+        Containers.Operations.start(client, created.id, baseUri = baseUri)
       )(_ => 
-        Containers.Operations.stop(client, created.id, None).void
+        Containers.Operations.stop(client, created.id, None, baseUri = baseUri).void
       )
       json <- Resource.eval(
-        Containers.Operations.inspect(client, created.id)
+        Containers.Operations.inspect(client, created.id, baseUri = baseUri)
       )
       setup <- Resource.eval(
         json.as[WhaleTailContainer](decoder(ports.keys.toList)).liftTo[F]

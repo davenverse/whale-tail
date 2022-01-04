@@ -6,6 +6,7 @@ import scala.concurrent.duration._
 import cats.effect._
 import scala.util.matching.Regex
 import scala.concurrent.duration._
+import org.http4s._
 
 sealed trait ReadinessStrategy
 object ReadinessStrategy {
@@ -22,13 +23,14 @@ object ReadinessStrategy {
     setup: WhaleTailContainer,
     strategy: ReadinessStrategy,
     timeout: Duration,
+    baseUri: Uri = Docker.versionPrefix
   ): F[Unit] = {
     val action = strategy match {
       case Delay(duration) => Temporal[F].sleep(duration)
       case LogRegex(regex, times) => 
-        Containers.Operations.logs(client, setup.id).flatMap{ s => 
+        Containers.Operations.logs(client, setup.id, baseUri = baseUri).flatMap{ s => 
           if (regex.findAllIn(s).size >= times) Applicative[F].unit
-          else Temporal[F].sleep(10.millis) >> checkReadiness(client, setup, strategy, Duration.Inf)
+          else Temporal[F].sleep(10.millis) >> checkReadiness(client, setup, strategy, Duration.Inf, baseUri)
         }
     }
     timeout match {

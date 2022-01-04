@@ -18,7 +18,7 @@ object ContainersExample extends IOApp {
     } 
     for {
 
-      client <- Docker.client[IO]
+      client <- Docker.default[IO]
       _ <- Resource.eval(
         Images.Operations.createFromImage(client, "redis", "latest".some).logInfo("createFromImage")
       )

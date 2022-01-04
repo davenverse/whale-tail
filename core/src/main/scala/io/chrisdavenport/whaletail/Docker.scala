@@ -17,7 +17,7 @@ import scodec.bits.ByteVector
 import org.http4s.ember.client.EmberClientBuilder
 import fs2.io.net.unixsocket.UnixSocketAddress
 import org.http4s.client.middleware.UnixSocket
-
+import io.chrisdavenport.env.Env
 
 object Docker {
 
@@ -56,7 +56,7 @@ object Docker {
     * tcp://0.0.0.0:2375
     */
   def default[F[_]: Async]: Resource[F, Client[F]] = for {
-    baseUriSOpt <- Resource.eval(Sync[F].delay(sys.env.get("DOCKER_HOST")))
+    baseUriSOpt <- Resource.eval(Env.make[F].get("DOCKER_HOST"))
     base <- Resource.eval(baseUriSOpt.traverse(parseConnection[F]))
     out <- base match {
       case Some(Left(baseUri)) => tcp(baseUri)

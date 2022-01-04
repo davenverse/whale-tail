@@ -24,7 +24,9 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
     name := "whale-tail"
   )
   .jvmSettings(
-    libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
+    libraryDependencies ++= Seq(
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
+    )
   )
   .jsSettings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)},
@@ -90,10 +92,10 @@ lazy val commonSettings = Seq(
     "io.circe"                    %%% "circe-core"                 % circeV,
     "io.circe"                    %%% "circe-generic"              % circeV,
     "io.circe"                    %%% "circe-parser"               % circeV,
+    "io.chrisdavenport"           %%% "env"                         % "0.1.0",
 
     "org.typelevel"                %%% "log4cats-core"              % log4catsV,
     "org.typelevel"           %%% "log4cats-testing"           % log4catsV     % Test,
-    
 
     "org.typelevel" %%% "cats-effect-testing-specs2" % "1.4.0" % Test,
   )

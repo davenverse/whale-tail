@@ -42,6 +42,19 @@ object Docker {
       .map(withHost(_))
   }
 
+  /**
+    * The default way to build a client, which happens to by environment based.
+    * Not my favorite, but people expect these semantics.
+    * 
+    * DOCKER_HOST is a variable used by docker to determine if it should connect
+    * to a different communication port.
+    * 
+    * UnixSocket
+    * unix:///var/run/docker.sock
+    * 
+    * TCP
+    * tcp://0.0.0.0:2375
+    */
   def default[F[_]: Async]: Resource[F, Client[F]] = for {
     baseUriSOpt <- Resource.eval(Sync[F].delay(sys.env.get("DOCKER_HOST")))
     base <- Resource.eval(baseUriSOpt.traverse(parseConnection[F]))

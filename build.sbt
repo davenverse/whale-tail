@@ -25,7 +25,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.17" % Test,
     )
   )
   .jsSettings(
@@ -38,7 +38,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   .in(file("manager"))
   .settings(name := "whale-tail-manager")
   .jvmSettings(
-    libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.15" % Test,
+    libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.17" % Test,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)},
@@ -55,7 +55,7 @@ lazy val examples = project.in(file("examples"))
       "org.typelevel"           %% "log4cats-slf4j"             % log4catsV,
       "ch.qos.logback" % "logback-classic"      % "1.2.11",
       "org.http4s"                  %% "http4s-ember-server"        % http4sV,
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.15",
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.17",
     )
   )
 

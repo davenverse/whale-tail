@@ -7,7 +7,7 @@ val http4sV = "0.23.7"
 val circeV = "0.14.1"
 val log4catsV = "2.1.1"
 
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.8", "3.1.2")
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.10", "3.1.2")
 
 
 // Projects

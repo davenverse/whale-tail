@@ -48,7 +48,8 @@ object Containers {
       exposedPorts: Map[Int, Option[Int]] = Map.empty, // Container Port, Host Port (None binds random)
       env: Map[String, String] = Map.empty,
       labels: Map[String, String] = Map.empty,
-      baseUri: Uri = Docker.versionPrefix
+      baseUri: Uri = Docker.versionPrefix,
+      binds: List[Bind] = Nil
     ): F[Data.ContainerCreated] = {
       val req = Request[F](Method.POST, containersPrefix(baseUri) / "create")
           .withEntity{
@@ -70,7 +71,8 @@ object Containers {
                       "HostPort" -> s"${host.getOrElse("")}".asJson
                     )
                   )}:_*
-                )
+                ),
+                "Binds" -> Json.arr(binds.map { case Bind(host, container, mode) => s"$host:$container:$mode".asJson }: _*)
               )
             ).dropNullValues
           }
@@ -174,4 +176,6 @@ object Containers {
         }
     }
   }
+
+  case class Bind(host: String, container: String, mode: String)
 }

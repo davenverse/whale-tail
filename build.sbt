@@ -1,20 +1,19 @@
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+val catsV = "2.9.0"
+val catsEffectV = "3.5.0"
+val fs2V = "3.7.0"
+val http4sV = "0.23.19"
+val circeV = "0.14.5"
+val log4catsV = "2.6.0"
 
-val catsV = "2.7.0"
-val catsEffectV = "3.3.12"
-val fs2V = "3.2.3"
-val http4sV = "0.23.7"
-val circeV = "0.14.1"
-val log4catsV = "2.1.1"
-
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.8", "3.1.2")
-
+ThisBuild / tlBaseVersion := "0.0"
+ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.10", "3.3.0")
+ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
-lazy val `whale-tail` = project.in(file("."))
+lazy val `whale-tail` = tlCrossRootProject
   .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
-  .aggregate(core.jvm, core.js, manager.jvm, manager.js, examples)
+  .aggregate(core, manager, examples)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)
 .crossType(CrossType.Pure)
@@ -45,7 +44,6 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   )
 
 lazy val examples = project.in(file("examples"))
-  .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
   .settings(commonSettings)
   .dependsOn(core.jvm, manager.jvm)
@@ -60,16 +58,10 @@ lazy val examples = project.in(file("examples"))
   )
 
 lazy val site = project.in(file("site"))
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(DavenverseMicrositePlugin)
+  .enablePlugins(TypelevelSitePlugin)
+  .settings(tlSiteIsTypelevelProject := true)
   .settings(commonSettings)
   .dependsOn(core.jvm)
-  .settings{
-    import microsites._
-    Seq(
-      micrositeDescription := "Pure Docker Client",
-    )
-  }
 
 // General Settings
 lazy val commonSettings = Seq(

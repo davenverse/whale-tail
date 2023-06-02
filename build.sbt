@@ -7,6 +7,7 @@ val log4catsV = "2.6.0"
 
 ThisBuild / tlBaseVersion := "0.0"
 ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.10", "3.3.0")
+ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
 lazy val `whale-tail` = tlCrossRootProject

@@ -6,6 +6,16 @@ val circeV = "0.14.5"
 val log4catsV = "2.6.0"
 
 ThisBuild / tlBaseVersion := "0.0"
+
+ThisBuild / organization := "io.chrisdavenport"
+ThisBuild / organizationName := "Christopher Davenport"
+ThisBuild / licenses := Seq(License.MIT)
+ThisBuild / developers := List(
+  // your GitHub handle and name
+  tlGitHubDev("christopherdavenport", "Christopher Davenport")
+)
+ThisBuild / tlSonatypeUseLegacyHost := true
+
 ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.10", "3.3.0")
 ThisBuild / tlCiReleaseBranches := Seq("main")
 

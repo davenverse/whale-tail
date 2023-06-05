@@ -17,14 +17,15 @@ object WhaleTailContainer {
     ports: Map[Int, Option[Int]],
     env: Map[String, String],
     labels: Map[String, String],
-    baseUri: Uri = Docker.versionPrefix
+    baseUri: Uri = Docker.versionPrefix,
+    binds: List[Containers.Bind] = Nil
   ): Resource[F,  WhaleTailContainer] = {
     for {
       img <- Resource.eval(
         Images.Operations.createFromImage(client, image, tag, baseUri = baseUri)
       )
       created <- Resource.eval(
-        Containers.Operations.create(client, s"$image${tag.map(s => s":$s").getOrElse("")}", ports, labels = Map("whale-identity" -> "whale-tail") ++ labels, baseUri = baseUri)
+        Containers.Operations.create(client, s"$image${tag.map(s => s":$s").getOrElse("")}", ports, env, labels = Map("whale-identity" -> "whale-tail") ++ labels, baseUri = baseUri, binds = binds)
       )
       _ <- Resource.make(
         Containers.Operations.start(client, created.id, baseUri = baseUri)

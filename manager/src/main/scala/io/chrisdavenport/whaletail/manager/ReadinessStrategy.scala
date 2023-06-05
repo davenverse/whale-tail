@@ -28,7 +28,7 @@ object ReadinessStrategy {
     val action = strategy match {
       case Delay(duration) => Temporal[F].sleep(duration)
       case LogRegex(regex, times) => 
-        Containers.Operations.logs(client, setup.id, baseUri = baseUri).flatMap{ s => 
+        Containers.Operations.logs(client, setup.id, baseUri = baseUri, stdout = true, stderr = true).flatMap{ s =>
           if (regex.findAllIn(s).size >= times) Applicative[F].unit
           else Temporal[F].sleep(10.millis) >> checkReadiness(client, setup, strategy, Duration.Inf, baseUri)
         }

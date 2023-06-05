@@ -11,8 +11,6 @@ ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
 lazy val `whale-tail` = tlCrossRootProject
-  .disablePlugins(MimaPlugin)
-  .enablePlugins(NoPublishPlugin)
   .aggregate(core, manager, examples)
 
 lazy val core = crossProject(JSPlatform, JVMPlatform)

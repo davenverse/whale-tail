@@ -16,7 +16,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / tlSonatypeUseLegacyHost := true
 
-ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.10", "3.3.0")
+ThisBuild / crossScalaVersions := Seq("2.12.18", "2.13.10", "3.3.0")
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects

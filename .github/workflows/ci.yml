@@ -39,27 +39,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Java (temurin@8)
-        id: download-java-temurin-8
-        if: matrix.java == 'temurin@8'
-        uses: typelevel/download-java@v2
-        with:
-          distribution: temurin
-          java-version: 8
-
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
         uses: actions/setup-java@v3
         with:
-          distribution: jdkfile
+          distribution: temurin
           java-version: 8
-          jdkFile: ${{ steps.download-java-temurin-8.outputs.jdkFile }}
           cache: sbt
 
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
-        run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Check that workflows are up to date
         run: sbt githubWorkflowCheck
@@ -81,11 +72,11 @@ jobs:
 
       - name: Make target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: mkdir -p .native/target .jvm/target examples/target site/target manager/.js/target core/.js/target target core/.jvm/target manager/.jvm/target .js/target project/target
+        run: mkdir -p manager/.js/target core/.js/target core/.jvm/target manager/.jvm/target project/target
 
       - name: Compress target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        run: tar cf targets.tar .native/target .jvm/target examples/target site/target manager/.js/target core/.js/target target core/.jvm/target manager/.jvm/target .js/target project/target
+        run: tar cf targets.tar manager/.js/target core/.js/target core/.jvm/target manager/.jvm/target project/target
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
@@ -101,7 +92,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.3.0]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -110,27 +100,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Java (temurin@8)
-        id: download-java-temurin-8
-        if: matrix.java == 'temurin@8'
-        uses: typelevel/download-java@v2
-        with:
-          distribution: temurin
-          java-version: 8
-
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
         uses: actions/setup-java@v3
         with:
-          distribution: jdkfile
+          distribution: temurin
           java-version: 8
-          jdkFile: ${{ steps.download-java-temurin-8.outputs.jdkFile }}
           cache: sbt
 
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
-        run: sbt '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Download target directories (2.12, whale-tailJVM)
         uses: actions/download-artifact@v3
@@ -214,7 +195,7 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_CREDENTIAL_HOST: ${{ secrets.SONATYPE_CREDENTIAL_HOST }}
-        run: sbt '++ ${{ matrix.scala }}' tlCiRelease
+        run: sbt tlCiRelease
 
   dependency-submission:
     name: Submit Dependencies
@@ -222,7 +203,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.3.0]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -231,37 +211,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Java (temurin@8)
-        id: download-java-temurin-8
-        if: matrix.java == 'temurin@8'
-        uses: typelevel/download-java@v2
-        with:
-          distribution: temurin
-          java-version: 8
-
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
         uses: actions/setup-java@v3
         with:
-          distribution: jdkfile
+          distribution: temurin
           java-version: 8
-          jdkFile: ${{ steps.download-java-temurin-8.outputs.jdkFile }}
           cache: sbt
 
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
-        run: sbt '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
+        with:
+          modules-ignore: whale-tailnative_2.12 whale-tailnative_2.13 whale-tailnative_3 whale-tailjvm_2.12 whale-tailjvm_2.13 whale-tailjvm_3 whale-tail-examples_2.12 whale-tail-examples_2.13 whale-tail-examples_3 site_2.12 site_2.13 site_3 whale-tailjs_2.12 whale-tailjs_2.13 whale-tailjs_3
+          configs-ignore: test scala-tool scala-doc-tool test-internal
 
   site:
     name: Generate Site
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.3.0]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -270,34 +243,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download Java (temurin@8)
-        id: download-java-temurin-8
-        if: matrix.java == 'temurin@8'
-        uses: typelevel/download-java@v2
-        with:
-          distribution: temurin
-          java-version: 8
-
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
         uses: actions/setup-java@v3
         with:
-          distribution: jdkfile
+          distribution: temurin
           java-version: 8
-          jdkFile: ${{ steps.download-java-temurin-8.outputs.jdkFile }}
           cache: sbt
 
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
-        run: sbt '++ ${{ matrix.scala }}' reload +update
+        run: sbt +update
 
       - name: Generate site
-        run: sbt '++ ${{ matrix.scala }}' site/tlSite
+        run: sbt site/tlSite
 
       - name: Publish site
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3.9.0
+        uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: site/target/docs/site

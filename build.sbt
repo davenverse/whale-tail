@@ -67,7 +67,7 @@ lazy val examples = project.in(file("examples"))
 
 lazy val site = project.in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
-  .settings(tlSiteIsTypelevelProject := true)
+  .settings(tlSiteIsTypelevelProject := Some(TypelevelProject.Affiliate))
   .settings(commonSettings)
   .dependsOn(core.jvm)
 

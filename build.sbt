@@ -1,6 +1,6 @@
 val catsV = "2.10.0"
 val catsEffectV = "3.5.1"
-val fs2V = "3.7.0"
+val fs2V = "3.8.0"
 val http4sV = "0.23.19"
 val circeV = "0.14.5"
 val log4catsV = "2.6.0"
@@ -16,7 +16,7 @@ ThisBuild / developers := List(
 )
 ThisBuild / tlSonatypeUseLegacyHost := true
 
-ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.11", "3.3.0")
+ThisBuild / crossScalaVersions := Seq("2.12.18", "2.13.11", "3.3.0")
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects

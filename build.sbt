@@ -1,6 +1,6 @@
 val catsV = "2.10.0"
 val catsEffectV = "3.5.1"
-val fs2V = "3.9.0"
+val fs2V = "3.9.1"
 val http4sV = "0.23.23"
 val circeV = "0.14.5"
 val log4catsV = "2.6.0"

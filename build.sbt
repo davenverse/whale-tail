@@ -3,7 +3,7 @@ val catsEffectV = "3.5.1"
 val fs2V = "3.9.1"
 val http4sV = "0.23.23"
 val circeV = "0.14.6"
-val log4catsV = "2.6.0"
+val log4catsV = "2.7.0"
 
 ThisBuild / tlBaseVersion := "0.0"
 

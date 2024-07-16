@@ -1,4 +1,4 @@
-val catsV = "2.9.0"
+val catsV = "2.10.0"
 val catsEffectV = "3.5.4"
 val fs2V = "3.9.4"
 val http4sV = "0.23.27"
@@ -6,7 +6,18 @@ val circeV = "0.14.9"
 val log4catsV = "2.7.0"
 
 ThisBuild / tlBaseVersion := "0.0"
+ThisBuild / tlSonatypeUseLegacyHost := true
 ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.14", "3.4.2")
+
+ThisBuild / organization := "io.chrisdavenport"
+ThisBuild / organizationName := "Christopher Davenport"
+ThisBuild / licenses := Seq(License.MIT)
+ThisBuild / developers := List(
+  // your GitHub handle and name
+  tlGitHubDev("christopherdavenport", "Christopher Davenport")
+)
+
+
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
@@ -35,7 +46,7 @@ lazy val manager = crossProject(JSPlatform, JVMPlatform)
   .in(file("manager"))
   .settings(name := "whale-tail-manager")
   .jvmSettings(
-    libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.19" % Test,
+    libraryDependencies += "com.github.jnr" % "jnr-unixsocket" % "0.38.20" % Test,
   )
   .jsSettings(
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)},
@@ -51,12 +62,13 @@ lazy val examples = project.in(file("examples"))
       "org.typelevel"           %% "log4cats-slf4j"             % log4catsV,
       "ch.qos.logback" % "logback-classic"      % "1.2.11",
       "org.http4s"                  %% "http4s-ember-server"        % http4sV,
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.19",
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.20",
     )
   )
 
 lazy val site = project.in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
+  .settings(tlSiteIsTypelevelProject := Some(TypelevelProject.Affiliate))
   .settings(commonSettings)
   .dependsOn(core.jvm)
 

@@ -1,11 +1,13 @@
 val catsV = "2.10.0"
-val catsEffectV = "3.5.1"
-val fs2V = "3.9.1"
-val http4sV = "0.23.23"
-val circeV = "0.14.6"
-val log4catsV = "2.6.0"
+val catsEffectV = "3.5.4"
+val fs2V = "3.9.4"
+val http4sV = "0.23.27"
+val circeV = "0.14.9"
+val log4catsV = "2.7.0"
 
 ThisBuild / tlBaseVersion := "0.0"
+ThisBuild / tlSonatypeUseLegacyHost := true
+ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.14", "3.4.2")
 
 ThisBuild / organization := "io.chrisdavenport"
 ThisBuild / organizationName := "Christopher Davenport"
@@ -14,9 +16,8 @@ ThisBuild / developers := List(
   // your GitHub handle and name
   tlGitHubDev("christopherdavenport", "Christopher Davenport")
 )
-ThisBuild / tlSonatypeUseLegacyHost := true
 
-ThisBuild / crossScalaVersions := Seq("2.12.18", "2.13.11", "3.3.0")
+
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
@@ -32,7 +33,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.20" % Test,
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.22" % Test,
     )
   )
   .jsSettings(

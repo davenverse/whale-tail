@@ -12,3 +12,4 @@ libraryDependencies ++= Seq(
   "io.chrisdavenport" %% "whale-tail" % "<version>"
 )
 ```
+

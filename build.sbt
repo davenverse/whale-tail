@@ -93,7 +93,6 @@ lazy val commonSettings = Seq(
     "io.circe"                    %%% "circe-core"                 % circeV,
     "io.circe"                    %%% "circe-generic"              % circeV,
     "io.circe"                    %%% "circe-parser"               % circeV,
-    "io.chrisdavenport"           %%% "env"                         % "0.1.0",
 
     "org.typelevel"                %%% "log4cats-core"              % log4catsV,
     "org.typelevel"           %%% "log4cats-testing"           % log4catsV     % Test,

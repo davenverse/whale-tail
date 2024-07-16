@@ -1,12 +1,12 @@
 val catsV = "2.9.0"
-val catsEffectV = "3.5.0"
-val fs2V = "3.7.0"
-val http4sV = "0.23.19"
-val circeV = "0.14.5"
-val log4catsV = "2.6.0"
+val catsEffectV = "3.5.4"
+val fs2V = "3.9.4"
+val http4sV = "0.23.27"
+val circeV = "0.14.9"
+val log4catsV = "2.7.0"
 
 ThisBuild / tlBaseVersion := "0.0"
-ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.10", "3.3.0")
+ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.14", "3.4.2")
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects
@@ -22,7 +22,7 @@ lazy val core = crossProject(JSPlatform, JVMPlatform)
   )
   .jvmSettings(
     libraryDependencies ++= Seq(
-      "com.github.jnr" % "jnr-unixsocket" % "0.38.19" % Test,
+      "com.github.jnr" % "jnr-unixsocket" % "0.38.22" % Test,
     )
   )
   .jsSettings(
@@ -57,7 +57,6 @@ lazy val examples = project.in(file("examples"))
 
 lazy val site = project.in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
-  .settings(tlSiteIsTypelevelProject := true)
   .settings(commonSettings)
   .dependsOn(core.jvm)
 

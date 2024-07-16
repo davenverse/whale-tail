@@ -17,7 +17,7 @@ import scodec.bits.ByteVector
 import org.http4s.ember.client.EmberClientBuilder
 import fs2.io.net.unixsocket.UnixSocketAddress
 import org.http4s.client.middleware.UnixSocket
-import io.chrisdavenport.env.Env
+import cats.effect.std.Env
 
 object Docker {
 

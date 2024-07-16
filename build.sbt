@@ -17,7 +17,6 @@ ThisBuild / developers := List(
   tlGitHubDev("christopherdavenport", "Christopher Davenport")
 )
 
-
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
 // Projects

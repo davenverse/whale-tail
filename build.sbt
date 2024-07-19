@@ -7,7 +7,7 @@ val log4catsV = "2.7.0"
 
 ThisBuild / tlBaseVersion := "0.0"
 ThisBuild / tlSonatypeUseLegacyHost := true
-ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.14", "3.4.2")
+ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.14", "3.3.3")
 
 ThisBuild / organization := "io.chrisdavenport"
 ThisBuild / organizationName := "Christopher Davenport"

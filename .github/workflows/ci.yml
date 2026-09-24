@@ -24,29 +24,28 @@ concurrency:
 
 jobs:
   build:
-    name: Build and Test
+    name: Test
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         scala: [2.12, 2.13, 3]
         java: [temurin@8]
         project: [whale-tailJVM, whale-tailJS]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
-      - name: Install sbt
-        if: contains(runner.os, 'macos')
-        run: brew install sbt
-
       - name: Checkout current branch (full)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 8
@@ -67,11 +66,11 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
       - name: Check binary compatibility
-        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' mimaReportBinaryIssues
 
       - name: Generate API documentation
-        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-latest'
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' doc
 
       - name: Make target directories
@@ -84,7 +83,7 @@ jobs:
 
       - name: Upload target directories
         if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-${{ matrix.scala }}-${{ matrix.project }}
           path: targets.tar
@@ -95,23 +94,22 @@ jobs:
     if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install sbt
-        if: contains(runner.os, 'macos')
-        run: brew install sbt
-
       - name: Checkout current branch (full)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 8
@@ -122,7 +120,7 @@ jobs:
         run: sbt +update
 
       - name: Download target directories (2.12, whale-tailJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-whale-tailJVM
 
@@ -132,7 +130,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.12, whale-tailJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-whale-tailJS
 
@@ -142,7 +140,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.13, whale-tailJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-whale-tailJVM
 
@@ -152,7 +150,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (2.13, whale-tailJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.13-whale-tailJS
 
@@ -162,7 +160,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (3, whale-tailJVM)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-whale-tailJVM
 
@@ -172,7 +170,7 @@ jobs:
           rm targets.tar
 
       - name: Download target directories (3, whale-tailJS)
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-whale-tailJS
 
@@ -207,26 +205,25 @@ jobs:
 
   dependency-submission:
     name: Submit Dependencies
-    if: github.event_name != 'pull_request'
+    if: github.event.repository.fork == false && github.event_name != 'pull_request'
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install sbt
-        if: contains(runner.os, 'macos')
-        run: brew install sbt
-
       - name: Checkout current branch (full)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 8
@@ -246,23 +243,22 @@ jobs:
     name: Generate Site
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         java: [temurin@11]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Install sbt
-        if: contains(runner.os, 'macos')
-        run: brew install sbt
-
       - name: Checkout current branch (full)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
         if: matrix.java == 'temurin@8'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 8
@@ -275,7 +271,7 @@ jobs:
       - name: Setup Java (temurin@11)
         id: setup-java-temurin-11
         if: matrix.java == 'temurin@11'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 11

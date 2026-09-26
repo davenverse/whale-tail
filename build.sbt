@@ -1,12 +1,12 @@
-val catsV = "2.10.0"
-val catsEffectV = "3.5.4"
-val fs2V = "3.9.4"
-val http4sV = "0.23.27"
+val catsV = "2.13.0"
+val catsEffectV = "3.7.1"
+val fs2V = "3.14.0"
+val http4sV = "0.23.37"
 val circeV = "0.14.9"
-val log4catsV = "2.7.0"
+val log4catsV = "2.8.0"
 
 ThisBuild / tlBaseVersion := "0.0"
-ThisBuild / crossScalaVersions := Seq("2.12.17", "2.13.18", "3.3.3")
+ThisBuild / crossScalaVersions := Seq("2.13.18", "3.3.8")
 
 ThisBuild / organization := "io.chrisdavenport"
 ThisBuild / organizationName := "Christopher Davenport"

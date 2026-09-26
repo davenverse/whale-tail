@@ -28,7 +28,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        scala: [2.12, 2.13, 3]
+        scala: [2.13, 3]
         java: [temurin@8]
         project: [whale-tailJVM, whale-tailJS]
     runs-on: ${{ matrix.os }}
@@ -118,26 +118,6 @@ jobs:
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
         run: sbt +update
-
-      - name: Download target directories (2.12, whale-tailJVM)
-        uses: actions/download-artifact@v6
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-whale-tailJVM
-
-      - name: Inflate target directories (2.12, whale-tailJVM)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.12, whale-tailJS)
-        uses: actions/download-artifact@v6
-        with:
-          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-whale-tailJS
-
-      - name: Inflate target directories (2.12, whale-tailJS)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
 
       - name: Download target directories (2.13, whale-tailJVM)
         uses: actions/download-artifact@v6
@@ -236,7 +216,7 @@ jobs:
       - name: Submit Dependencies
         uses: scalacenter/sbt-dependency-submission@v2
         with:
-          modules-ignore: whale-tailnative_2.12 whale-tailnative_2.13 whale-tailnative_3 whale-tailjvm_2.12 whale-tailjvm_2.13 whale-tailjvm_3 whale-tail-examples_2.12 whale-tail-examples_2.13 whale-tail-examples_3 site_2.12 site_2.13 site_3 whale-tailjs_2.12 whale-tailjs_2.13 whale-tailjs_3
+          modules-ignore: whale-tailnative_2.13 whale-tailnative_3 whale-tailjvm_2.13 whale-tailjvm_3 whale-tail-examples_2.13 whale-tail-examples_3 site_2.13 site_3 whale-tailjs_2.13 whale-tailjs_3
           configs-ignore: test scala-tool scala-doc-tool test-internal
 
   site:
